@@ -1,0 +1,11 @@
+com\mszlu\xt\common\model\CallResult$CallResultBuilder.class
+com\mszlu\xt\common\wx\config\WxOpenConfig.class
+com\mszlu\xt\common\model\CallResult.class
+com\mszlu\xt\common\model\BusinessCodeEnum.class
+com\mszlu\xt\common\service\ServiceTemplate.class
+com\mszlu\xt\common\utils\JwtUtil.class
+com\mszlu\xt\common\service\TemplateAction.class
+com\mszlu\xt\common\service\ServiceTemplateImpl.class
+com\mszlu\xt\common\login\UserThreadLocal.class
+com\mszlu\xt\common\service\AbstractTemplateAction.class
+com\mszlu\xt\common\constants\RedisKey.class

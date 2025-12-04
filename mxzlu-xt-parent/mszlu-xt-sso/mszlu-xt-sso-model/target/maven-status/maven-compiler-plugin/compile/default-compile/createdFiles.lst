@@ -1,0 +1,4 @@
+com\mszlu\xt\sso\model\UserModel.class
+com\mszlu\xt\sso\model\enums\LoginType.class
+com\mszlu\xt\sso\model\params\LoginParam.class
+com\mszlu\xt\sso\model\params\UserParam.class
