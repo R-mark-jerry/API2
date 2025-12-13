@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.myruoyi.api.mapper.ApiPermissionMapper">
+    
+    <resultMap type="ApiPermission" id="ApiPermissionResult">
+        <result property="permissionId"     column="permission_id"     />
+        <result property="apiId"            column="api_id"            />
+        <result property="permissionType"    column="permission_type"    />
+        <result property="permissionTarget"  column="permission_target"  />
+        <result property="permissionScope"   column="permission_scope"   />
+        <result property="createBy"         column="create_by"         />
+        <result property="createTime"       column="create_time"       />
+        <result property="updateBy"         column="update_by"         />
+        <result property="updateTime"       column="update_time"       />
+        <result property="apiCode"          column="api_code"          />
+        <result property="apiName"          column="api_name"          />
+        <result property="targetName"       column="target_name"       />
+    </resultMap>
+
+    <sql id="selectApiPermissionVo">
+        select p.permission_id, p.api_id, p.permission_type, p.permission_target, p.permission_scope,
+               p.create_by, p.create_time, p.update_by, p.update_time,
+               i.api_code, i.api_name,
+               case when p.permission_type = '1' then r.role_name else u.nick_name end as target_name
+        from api_permission p
+        left join api_info i on p.api_id = i.api_id
+        left join sys_role r on p.permission_type = '1' and p.permission_target = r.role_id
+        left join sys_user u on p.permission_type = '2' and p.permission_target = u.user_id
+    </sql>
+
+    <select id="selectPermissionsByApiId" parameterType="Long" resultMap="ApiPermissionResult">
+        <include refid="selectApiPermissionVo"/>
+        where p.api_id = #{apiId}
+        order by p.permission_type, p.permission_target
+    </select>
+
+    <select id="selectPermissionsByUserId" parameterType="Long" resultMap="ApiPermissionResult">
+        <include refid="selectApiPermissionVo"/>
+        where p.permission_type = '2' and p.permission_target = #{userId}
+        order by i.api_code
+    </select>
+
+    <select id="selectPermissionsByRoleId" parameterType="Long" resultMap="ApiPermissionResult">
+        <include refid="selectApiPermissionVo"/>
+        where p.permission_type = '1' and p.permission_target = #{roleId}
+        order by i.api_code
+    </select>
+
+    <delete id="deleteBatchPermission">
+        delete from api_permission 
+        where api_id = #{apiId} 
+        and permission_type = #{permissionType}
+        and permission_target in
+        <foreach collection="permissionTargets" item="target" open="(" separator="," close=")">
+            #{target}
+        </foreach>
+    </delete>
+
+    <select id="checkUserPermission" resultType="int">
+        select count(1) from api_permission p
+        where p.api_id = #{apiId}
+        and ((p.permission_type = '2' and p.permission_target = #{userId})
+             or (p.permission_type = '1' and p.permission_target in 
+                 (select role_id from sys_user_role where user_id = #{userId})))
+        and p.permission_scope = #{permissionScope}
+    </select>
+
+</mapper>

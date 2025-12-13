@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.myruoyi.api.mapper.ApiInfoMapper">
+    
+    <resultMap type="ApiInfo" id="ApiInfoResult">
+        <result property="apiId"           column="api_id"           />
+        <result property="appId"            column="app_id"            />
+        <result property="moduleId"         column="module_id"         />
+        <result property="apiCode"          column="api_code"          />
+        <result property="apiName"          column="api_name"          />
+        <result property="apiDesc"          column="api_desc"          />
+        <result property="requestMethod"    column="request_method"    />
+        <result property="requestUrl"       column="request_url"       />
+        <result property="contentType"       column="content_type"       />
+        <result property="requestParams"    column="request_params"    />
+        <result property="responseParams"   column="response_params"   />
+        <result property="requestExample"   column="request_example"   />
+        <result property="responseExample"  column="response_example"  />
+        <result property="apiStatus"        column="api_status"        />
+        <result property="publishStatus"    column="publish_status"    />
+        <result property="ownerId"          column="owner_id"          />
+        <result property="ownerName"        column="owner_name"        />
+        <result property="createBy"         column="create_by"         />
+        <result property="createTime"       column="create_time"       />
+        <result property="updateBy"         column="update_by"         />
+        <result property="updateTime"       column="update_time"       />
+        <result property="deleted"          column="deleted"          />
+        <result property="appName"          column="app_name"          />
+        <result property="moduleName"        column="module_name"        />
+    </resultMap>
+
+    <sql id="selectApiInfoVo">
+        select i.api_id, i.app_id, i.module_id, i.api_code, i.api_name, i.api_desc, 
+               i.request_method, i.request_url, i.content_type, i.request_params, i.response_params,
+               i.request_example, i.response_example, i.api_status, i.publish_status, 
+               i.owner_id, i.owner_name, i.create_by, i.create_time, i.update_by, i.update_time, i.deleted,
+               a.app_name, m.module_name
+        from api_info i
+        left join api_app a on i.app_id = a.app_id
+        left join api_module m on i.module_id = m.module_id
+    </sql>
+
+    <select id="selectApisByAppId" parameterType="Long" resultMap="ApiInfoResult">
+        <include refid="selectApiInfoVo"/>
+        where i.app_id = #{appId} and i.deleted = 0
+        order by i.create_time desc
+    </select>
+
+    <select id="selectApisByModuleId" parameterType="Long" resultMap="ApiInfoResult">
+        <include refid="selectApiInfoVo"/>
+        where i.module_id = #{moduleId} and i.deleted = 0
+        order by i.create_time desc
+    </select>
+
+</mapper>

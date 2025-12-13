@@ -1,0 +1,186 @@
+// Element UI 样式覆盖
+
+// 覆盖 element-plus 默认样式
+.el-breadcrumb__inner,
+.el-breadcrumb__inner a {
+  font-weight: 400 !important;
+}
+
+.el-upload {
+  input[type="file"] {
+    display: none !important;
+  }
+}
+
+.el-upload__input {
+  display: none;
+}
+
+// 覆盖 el-dialog 样式
+.el-dialog {
+  transform: none;
+  left: 0;
+  position: relative;
+  margin: 0 auto;
+}
+
+// 覆盖 el-drawer 样式
+.el-drawer__body {
+  padding: 20px;
+}
+
+// 覆盖 el-menu 样式
+.el-menu {
+  border: none;
+  height: 100%;
+  width: 100% !important;
+}
+
+// 覆盖 el-sub-menu 样式
+.el-sub-menu {
+  .el-menu-item {
+    min-width: 210px !important;
+    background-color: #1f2d3d !important;
+    
+    &:hover {
+      background-color: #001528 !important;
+    }
+  }
+}
+
+// 覆盖 el-table 样式
+.el-table {
+  .el-table__header-wrapper {
+    th {
+      word-break: break-word;
+      background-color: #f5f7fa !important;
+      color: #606266 !important;
+      font-weight: 500 !important;
+    }
+  }
+}
+
+// 覆盖 el-pagination 样式
+.el-pagination {
+  .el-pagination__total {
+    margin-right: 10px;
+  }
+  
+  .el-pagination__sizes {
+    margin-right: 10px;
+  }
+}
+
+// 覆盖 el-form 样式
+.el-form {
+  .el-form-item__label {
+    font-weight: 500;
+  }
+  
+  .el-form-item__error {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    font-size: 12px;
+    line-height: 1;
+    color: #f56c6c;
+    padding-top: 4px;
+  }
+}
+
+// 覆盖 el-button 样式
+.el-button {
+  &--primary {
+    background-color: #409eff;
+    border-color: #409eff;
+    
+    &:hover, &:focus {
+      background-color: #66b1ff;
+      border-color: #66b1ff;
+    }
+    
+    &:active {
+      background-color: #3a8ee6;
+      border-color: #3a8ee6;
+    }
+  }
+}
+
+// 覆盖 el-card 样式
+.el-card {
+  border-radius: 4px;
+  border: 1px solid #ebeef5;
+  background-color: #fff;
+  overflow: hidden;
+  color: #303133;
+  transition: 0.3s;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.12), 0 0 6px rgba(0, 0, 0, 0.04);
+}
+
+// 覆盖 el-select 样式
+.el-select {
+  width: 100%;
+}
+
+// 覆盖 el-input 样式
+.el-input {
+  &.is-disabled {
+    .el-input__inner {
+      background-color: #f5f7fa;
+      border-color: #e4e7ed;
+      color: #c0c4cc;
+      cursor: not-allowed;
+    }
+  }
+}
+
+// 覆盖 el-tree 样式
+.el-tree {
+  background: transparent;
+  
+  .el-tree-node__content {
+    &:hover {
+      background-color: #f5f7fa;
+    }
+  }
+}
+
+// 覆盖 el-tabs 样式
+.el-tabs {
+  .el-tabs__header {
+    margin: 0 0 20px;
+  }
+  
+  .el-tabs__nav-wrap {
+    &::after {
+      height: 1px;
+    }
+  }
+}
+
+// 覆盖 el-tag 样式
+.el-tag {
+  &.el-tag--success {
+    background-color: #f0f9ff;
+    border-color: #e1f3d8;
+    color: #67c23a;
+  }
+  
+  &.el-tag--warning {
+    background-color: #fdf6ec;
+    border-color: #faecd8;
+    color: #e6a23c;
+  }
+  
+  &.el-tag--danger {
+    background-color: #fef0f0;
+    border-color: #fde2e2;
+    color: #f56c6c;
+  }
+  
+  &.el-tag--info {
+    background-color: #f4f4f5;
+    border-color: #e9e9eb;
+    color: #909399;
+  }
+}

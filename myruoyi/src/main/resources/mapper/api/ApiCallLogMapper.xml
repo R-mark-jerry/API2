@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.myruoyi.api.mapper.ApiCallLogMapper">
+    
+    <resultMap type="com.myruoyi.api.entity.ApiCallLog" id="ApiCallLogResult">
+        <result property="callId"          column="call_id"          />
+        <result property="apiId"            column="api_id"            />
+        <result property="apiCode"          column="api_code"          />
+        <result property="callUserId"        column="call_user_id"        />
+        <result property="callUserName"      column="call_user_name"      />
+        <result property="callIp"            column="call_ip"            />
+        <result property="requestMethod"     column="request_method"     />
+        <result property="requestUrl"        column="request_url"        />
+        <result property="requestParams"     column="request_params"     />
+        <result property="responseStatus"    column="response_status"    />
+        <result property="responseData"      column="response_data"      />
+        <result property="responseTime"      column="response_time"      />
+        <result property="callResult"        column="call_result"        />
+        <result property="errorMessage"      column="error_message"      />
+        <result property="callTime"          column="call_time"          />
+        <result property="apiName"          column="api_name"          />
+    </resultMap>
+
+    <sql id="selectApiCallLogVo">
+        select l.call_id, l.api_id, l.api_code, l.call_user_id, l.call_user_name, l.call_ip,
+               l.request_method, l.request_url, l.request_params, l.response_status, l.response_data,
+               l.response_time, l.call_result, l.error_message, l.call_time,
+               i.api_name
+        from api_call_log l
+        left join api_info i on l.api_id = i.api_id
+    </sql>
+
+    <select id="selectCallLogsByApiId" parameterType="Long" resultMap="ApiCallLogResult">
+        <include refid="selectApiCallLogVo"/>
+        where l.api_id = #{apiId}
+        order by l.call_time desc
+    </select>
+
+    <select id="selectCallLogsByUserId" parameterType="Long" resultMap="ApiCallLogResult">
+        <include refid="selectApiCallLogVo"/>
+        where l.call_user_id = #{userId}
+        order by l.call_time desc
+    </select>
+
+    <select id="selectCallLogsByTimeRange" resultMap="ApiCallLogResult">
+        <include refid="selectApiCallLogVo"/>
+        where l.call_time between #{startTime} and #{endTime}
+        order by l.call_time desc
+    </select>
+
+    <select id="countCallsByApiId" parameterType="Long" resultType="Long">
+        select count(1) from api_call_log where api_id = #{apiId}
+    </select>
+
+    <select id="countSuccessCallsByApiId" parameterType="Long" resultType="Long">
+        select count(1) from api_call_log where api_id = #{apiId} and call_result = '0'
+    </select>
+
+    <select id="countFailCallsByApiId" parameterType="Long" resultType="Long">
+        select count(1) from api_call_log where api_id = #{apiId} and call_result = '1'
+    </select>
+
+    <select id="getAvgResponseTimeByApiId" parameterType="Long" resultType="Double">
+        select avg(response_time) from api_call_log where api_id = #{apiId} and call_result = '0'
+    </select>
+
+    <select id="getMaxResponseTimeByApiId" parameterType="Long" resultType="Long">
+        select max(response_time) from api_call_log where api_id = #{apiId} and call_result = '0'
+    </select>
+
+    <select id="getMinResponseTimeByApiId" parameterType="Long" resultType="Long">
+        select min(response_time) from api_call_log where api_id = #{apiId} and call_result = '0'
+    </select>
+
+    <delete id="deleteCallLogsBefore" parameterType="java.time.LocalDateTime">
+        <![CDATA[delete from api_call_log where call_time < #{endTime}]]>
+    </delete>
+
+</mapper>

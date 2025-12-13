@@ -1,0 +1,19 @@
+### 测试登录接口
+POST http://localhost:8080/auth/login
+Content-Type: application/json
+
+{
+  "username": "admin",
+  "password": "admin123"
+}
+
+### 测试获取用户信息（需要在请求头中添加JWT令牌）
+GET http://localhost:8080/auth/info
+Authorization: Bearer {{token}}
+
+### 测试访问API应用列表（需要认证）
+GET http://localhost:8080/api/app/list
+Authorization: Bearer {{token}}
+
+### 访问API文档（无需认证）
+GET http://localhost:8080/doc.html

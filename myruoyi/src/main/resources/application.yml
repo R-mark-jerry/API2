@@ -1,0 +1,217 @@
+server:
+  port: 8080
+  servlet:
+    context-path: /
+  tomcat:
+    uri-encoding: UTF-8
+    threads:
+      max: 200
+      min-spare: 30
+
+spring:
+  application:
+    name: api-lifecycle-platform
+  config:
+    import: "optional:classpath:/application-dev.yml"
+  
+  # 数据源配置
+  datasource:
+    type: com.alibaba.druid.pool.DruidDataSource
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://172.17.100.129:3306/api_lifecycle?useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=false&serverTimezone=GMT%2B8
+    username: root
+    password: rjxzzb
+    druid:
+      # 初始连接数
+      initial-size: 5
+      # 最小连接池数量
+      min-idle: 10
+      # 最大连接池数量
+      max-active: 20
+      # 配置获取连接等待超时的时间
+      max-wait: 60000
+      # 配置间隔多久才进行一次检测，检测需要关闭的空闲连接，单位是毫秒
+      time-between-eviction-runs-millis: 60000
+      # 配置一个连接在池中最小生存的时间，单位是毫秒
+      min-evictable-idle-time-millis: 300000
+      # 配置一个连接在池中最大生存的时间，单位是毫秒
+      max-evictable-idle-time-millis: 900000
+      # 配置检测连接是否有效
+      validation-query: SELECT 1 FROM DUAL
+      test-while-idle: true
+      test-on-borrow: false
+      test-on-return: false
+      # 打开PSCache，并且指定每个连接上PSCache的大小
+      pool-prepared-statements: true
+      max-pool-prepared-statement-per-connection-size: 20
+      # 配置监控统计拦截的filters，去掉后监控界面sql无法统计，'wall'用于防火墙
+      filters: stat,wall,slf4j
+      # 通过connectProperties属性来打开mergeSql功能；慢SQL记录
+      connection-properties: druid.stat.mergeSql\=true;druid.stat.slowSqlMillis\=5000
+      # 配置DruidStatFilter
+      web-stat-filter:
+        enabled: true
+        url-pattern: "/*"
+        exclusions: "*.js,*.gif,*.jpg,*.bmp,*.png,*.css,*.ico,/druid/*"
+      # 配置DruidStatViewServlet
+      stat-view-servlet:
+        enabled: true
+        # 设置白名单，不填则允许所有访问
+        allow:
+        url-pattern: "/druid/*"
+        # 控制台管理用户名和密码
+        login-username: admin
+        login-password: 123456
+
+  # Redis配置
+  data:
+    redis:
+      host: 172.21.79.164
+      port: 6379
+      password: rjxzzb
+      timeout: 10s
+      database: 0
+      lettuce:
+        pool:
+          min-idle: 0
+          max-idle: 8
+          max-active: 8
+          max-wait: -1ms
+
+  # Jackson配置
+  jackson:
+    time-zone: GMT+8
+    date-format: yyyy-MM-dd HH:mm:ss
+    property-naming-strategy: SNAKE_CASE
+
+  # 文件上传配置
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+
+# Flyway数据库迁移配置
+flyway:
+  enabled: true
+  locations: classpath:db/migration
+  baseline-on-migrate: true
+  validate-on-migrate: true
+
+# MyBatis Plus配置
+mybatis-plus:
+  # 配置mapper的xml，mapper.xml所在位置
+  mapper-locations: classpath*:mapper/**/*Mapper.xml
+  # 实体扫描，多个package用逗号或者分号分隔
+  type-aliases-package: com.myruoyi.**.entity
+  # 配置逻辑删除全局值
+  global-config:
+    db-config:
+      # 主键类型：AUTO为自增
+      id-type: AUTO
+      # 逻辑删除配置
+      logic-delete-field: deleted
+      logic-delete-value: 1
+      logic-not-delete-value: 0
+  configuration:
+    # 是否开启自动驼峰命名规则映射
+    map-underscore-to-camel-case: true
+    # 开启缓存
+    cache-enabled: false
+    # 当设置为true的时候，懒加载的对象可能被任何懒属性全部加载，否则，每个属性都将会按需要加载
+    aggressive-lazy-loading: false
+    # 是否允许单个语句返回多结果集
+    multiple-result-sets-enabled: true
+    # 使用列标签代替列名
+    use-column-label: true
+    # 允许JDBC 生成主键
+    use-generated-keys: false
+    # 指定 MyBatis 如何自动映射列到字段或属性
+    auto-mapping-behavior: partial
+    # 指定发现自动映射目标未知列的行为
+    auto-mapping-unknown-column-behavior: warning
+    # 配置默认的执行器
+    default-executor-type: simple
+    # 设置超时时间
+    default-statement-timeout: 25
+    # 设置数据库驱动获取数据的超时时间
+    default-fetch-size: 100
+    # 是否允许在嵌套语句中使用分页
+    safe-row-bounds-enabled: false
+    # 是否开启自动驼峰命名规则映射
+    map-nested-result-maps-for-single-result: false
+    # 设置本地缓存范围
+    local-cache-scope: session
+    # 设置数据库类型
+    database-type: mysql
+    # 设置JDBC类型为NULL时的替代类型
+    jdbc-type-for-null: other
+    # 指定哪个对象的方法触发一次延迟加载
+    lazy-loading-enabled: true
+    # 设置触发延迟加载的方法
+    lazy-load-trigger-methods: equals,clone,hashCode,toString
+
+# 日志配置
+logging:
+  level:
+    com.myruoyi: debug
+    org.springframework: warn
+    org.springframework.security: debug
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{50} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{50} - %msg%n"
+  file:
+    name: logs/api-lifecycle-platform.log
+
+# 管理端点配置
+management:
+  endpoints:
+    web:
+      exposure:
+        include: '*'
+  endpoint:
+    health:
+      show-details: always
+
+# JWT配置
+jwt:
+  secret: myruoyi-api-lifecycle-platform-secret-key-2024
+  expiration: 86400000  # 24小时
+
+# Knife4j配置
+knife4j:
+  enable: true
+  openapi:
+    title: API全生命周期管理平台接口文档
+    description: 提供API元数据管理、调试、发布、权限控制、监控等功能
+    version: 1.0.0
+    concat: myruoyi
+    email: myruoyi@example.com
+  setting:
+    language: zh-CN
+    enable-swagger-models: true
+    enable-document-manage: true
+    swagger-model-name: 实体类列表
+    enable-version: false
+    enable-reload-cache-parameter: false
+    enable-after-script: true
+    enable-filter-multipart-api-method-type: POST
+    enable-filter-multipart-apis: false
+    enable-request-cache: true
+    enable-host: false
+    enable-host-text: localhost:8080
+    enable-home-custom: false
+    home-custom-location: classpath:markdown/home.md
+    enable-search: true
+    enable-footer: false
+    enable-footer-custom: true
+    footer-custom-content: Copyright © 2024 MyRuoYi All Rights Reserved
+    enable-dynamic-parameter: false
+    enable-debug: true
+    enable-open-api: true
+    enable-group: true
+  cors: true
+  production: false
+  basic:
+    enable: false
+    username: admin
+    password: 123456

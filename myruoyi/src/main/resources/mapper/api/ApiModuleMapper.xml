@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.myruoyi.api.mapper.ApiModuleMapper">
+    
+    <resultMap type="ApiModule" id="ApiModuleResult">
+        <result property="moduleId"    column="module_id"    />
+        <result property="appId"       column="app_id"       />
+        <result property="moduleCode"  column="module_code"  />
+        <result property="moduleName"  column="module_name"  />
+        <result property="moduleDesc"  column="module_desc"  />
+        <result property="parentId"    column="parent_id"    />
+        <result property="orderNum"    column="order_num"    />
+        <result property="createBy"    column="create_by"    />
+        <result property="createTime"  column="create_time"  />
+        <result property="updateBy"    column="update_by"    />
+        <result property="updateTime"  column="update_time"  />
+        <result property="deleted"     column="deleted"     />
+        <result property="appName"     column="app_name"     />
+    </resultMap>
+
+    <sql id="selectModuleVo">
+        select m.module_id, m.app_id, m.module_code, m.module_name, m.module_desc, 
+               m.parent_id, m.order_num, m.create_by, m.create_time, m.update_by, m.update_time, m.deleted,
+               a.app_name
+        from api_module m
+        left join api_app a on m.app_id = a.app_id
+    </sql>
+
+    <select id="selectModulesByAppId" parameterType="Long" resultMap="ApiModuleResult">
+        <include refid="selectModuleVo"/>
+        where m.app_id = #{appId} and m.deleted = 0
+        order by m.parent_id, m.order_num
+    </select>
+
+    <select id="selectChildModuleCount" parameterType="Long" resultType="int">
+        select count(1) from api_module where parent_id = #{parentId} and deleted = 0
+    </select>
+
+</mapper>
