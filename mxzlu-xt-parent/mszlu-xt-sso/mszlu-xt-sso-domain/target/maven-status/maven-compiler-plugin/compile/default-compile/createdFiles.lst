@@ -1,6 +1,0 @@
-com\mszlu\xt\sso\domain\repository\TokenDomainRepository.class
-com\mszlu\xt\sso\domain\repository\UserDomainRepository.class
-com\mszlu\xt\sso\domain\UserDomain.class
-com\mszlu\xt\sso\domain\LoginDomain.class
-com\mszlu\xt\sso\domain\repository\LoginDomainRepository.class
-com\mszlu\xt\sso\domain\TokenDomain.class
