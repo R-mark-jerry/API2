@@ -35,7 +35,7 @@ export const useUserStore = defineStore('user', {
             const { data } = response
             this.token = data.token
             this.userId = data.userId
-            this.userName = data.userName
+            this.userName = data.userName || data.username
             this.nickName = data.nickName
             this.avatar = data.avatar
             this.email = data.email
@@ -85,7 +85,7 @@ export const useUserStore = defineStore('user', {
             }
             
             this.userId = data.userId
-            this.userName = data.userName
+            this.userName = data.userName || data.username
             this.nickName = data.nickName
             this.avatar = data.avatar
             this.email = data.email
@@ -127,7 +127,7 @@ export const useUserStore = defineStore('user', {
     // 更新用户信息
     updateUserInfo(userInfo) {
       this.userId = userInfo.userId || this.userId
-      this.userName = userInfo.userName || this.userName
+      this.userName = userInfo.userName || userInfo.username || this.userName
       this.nickName = userInfo.nickName || this.nickName
       this.avatar = userInfo.avatar || this.avatar
       this.email = userInfo.email || this.email

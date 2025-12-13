@@ -68,6 +68,8 @@ public class AuthServiceImpl implements AuthService {
         // 构建登录用户信息
         LoginUserDTO loginUserDTO = new LoginUserDTO();
         BeanUtils.copyProperties(user, loginUserDTO);
+        // 手动设置username，因为字段名不一致
+        loginUserDTO.setUsername(user.getUserName());
         loginUserDTO.setToken(token);
         loginUserDTO.setRoles(roles);
         loginUserDTO.setPermissions(permissions);
@@ -134,6 +136,8 @@ public class AuthServiceImpl implements AuthService {
         // 构建登录用户信息
         LoginUserDTO loginUserDTO = new LoginUserDTO();
         BeanUtils.copyProperties(user, loginUserDTO);
+        // 手动设置username，因为字段名不一致
+        loginUserDTO.setUsername(user.getUserName());
         loginUserDTO.setToken(token);
         loginUserDTO.setRoles(roles);
         loginUserDTO.setPermissions(permissions);
@@ -176,6 +180,8 @@ public class AuthServiceImpl implements AuthService {
         // 构建登录用户信息
         LoginUserDTO loginUserDTO = new LoginUserDTO();
         BeanUtils.copyProperties(user, loginUserDTO);
+        // 手动设置username，因为字段名不一致
+        loginUserDTO.setUsername(user.getUserName());
         loginUserDTO.setRoles(roles);
         loginUserDTO.setPermissions(permissions);
         loginUserDTO.setDeptName(deptName);

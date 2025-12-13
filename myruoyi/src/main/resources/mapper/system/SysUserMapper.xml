@@ -57,8 +57,9 @@
     <select id="selectDeptNameByUserId" parameterType="Long" resultType="String">
         select d.dept_name
         from sys_dept d
-        where d.dept_id = (select dept_id from sys_user where user_id = #{userId})
+        where d.dept_id = (select dept_id from sys_user where user_id = #{userId} and deleted = '0')
           and d.deleted = '0'
+        limit 1
     </select>
 
     <sql id="selectUserVo">
