@@ -41,6 +41,9 @@ export const useUserStore = defineStore('user', {
             this.email = data.email
             this.phone = data.phone
             
+            // 设置默认权限，实际应该从后端获取
+            this.permissions = ['*:*:*']
+           
             setToken(data.token)
             resolve(response)
           })
@@ -92,7 +95,7 @@ export const useUserStore = defineStore('user', {
             this.phone = data.phone
             
             // 这里可以根据后端返回的权限信息设置permissions
-            // this.permissions = data.permissions || []
+            this.permissions = data.permissions || ['*:*:*']
             
             resolve(data)
           })

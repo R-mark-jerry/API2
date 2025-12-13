@@ -31,6 +31,10 @@ import AppMain from './components/AppMain.vue'
     background-color: #304156;
     transition: width 0.28s;
     overflow: hidden;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 1001;
   }
   
   .main-container {
@@ -38,11 +42,15 @@ import AppMain from './components/AppMain.vue'
     display: flex;
     flex-direction: column;
     overflow: hidden;
+    margin-left: 210px; // 为侧边栏留出空间
+    min-height: 100vh;
     
     .navbar {
       height: 50px;
       background-color: #fff;
       box-shadow: 0 1px 4px rgba(0, 21, 41, 0.08);
+      position: relative;
+      z-index: 1000;
     }
   }
 }

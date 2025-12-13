@@ -29,11 +29,12 @@
 
 <script setup>
 import { computed } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 import SidebarItem from './SidebarItem.vue'
 
 const route = useRoute()
+const router = useRouter()
 const userStore = useUserStore()
 
 const isCollapse = computed(() => false) // 可以从store获取侧边栏折叠状态
@@ -64,65 +65,14 @@ const routes = computed(() => {
     })
   }
   
-  // 获取需要显示的路由
-  const allRoutes = [
-    {
-      path: '/',
-      meta: { title: '工作台', icon: 'House' },
-      children: [
-        {
-          path: '/dashboard',
-          meta: { title: '工作台', icon: 'House' }
-        }
-      ]
-    },
-    {
-      path: '/api',
-      meta: { title: 'API管理', icon: 'Document' },
-      children: [
-        {
-          path: '/api/app',
-          meta: { title: '应用管理', icon: 'Collection' }
-        },
-        {
-          path: '/api/module',
-          meta: { title: '模块管理', icon: 'FolderOpened' }
-        },
-        {
-          path: '/api/info',
-          meta: { title: '接口管理', icon: 'List' }
-        },
-        {
-          path: '/api/permission',
-          meta: { title: '权限管理', icon: 'Lock' }
-        }
-      ]
-    },
-    {
-      path: '/statistics',
-      meta: { title: '统计分析', icon: 'DataAnalysis' },
-      children: [
-        {
-          path: '/statistics/call',
-          meta: { title: '调用统计', icon: 'TrendCharts' }
-        },
-        {
-          path: '/statistics/performance',
-          meta: { title: '性能分析', icon: 'Timer' }
-        }
-      ]
-    },
-    {
-      path: '/system',
-      meta: { title: '系统管理', icon: 'Setting' },
-      children: [
-        {
-          path: '/system/user',
-          meta: { title: '用户管理', icon: 'User' }
-        }
-      ]
+  // 从路由配置中获取需要显示的路由
+  const allRoutes = router.options.routes.filter(route => {
+    // 过滤掉登录页面和404页面
+    if (route.path === '/login' || route.path === '/:pathMatch(.*)*') {
+      return false
     }
-  ]
+    return true
+  })
   
   return filterRoutes(allRoutes)
 })
