@@ -15,7 +15,7 @@ import java.time.LocalDateTime;
 @Data
 @TableName("api_call_log")
 @Schema(description = "API调用记录")
-public class ApiCallLog {
+public class   ApiCallLog {
 
     private static final long serialVersionUID = 1L;
 

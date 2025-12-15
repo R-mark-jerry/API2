@@ -1,7 +1,7 @@
 <template>
   <div v-if="!item.meta || !item.meta.hidden">
     <template v-if="hasOneShowingChild(item.children, item)">
-      <link
+      <app-link
         v-if="onlyOneChild.meta"
         :to="resolvePath(onlyOneChild.path)"
       >
@@ -11,7 +11,7 @@
           </el-icon>
           <template #title>{{ onlyOneChild.meta.title }}</template>
         </el-menu-item>
-      </link>
+      </app-link>
     </template>
     
     <el-sub-menu

@@ -68,7 +68,7 @@ const routes = computed(() => {
   // 从路由配置中获取需要显示的路由
   const allRoutes = router.options.routes.filter(route => {
     // 过滤掉登录页面和404页面
-    if (route.path === '/login' || route.path === '/:pathMatch(.*)*') {
+    if (route.path === '/login' || route.path === '/:pathMatch(.*)*' || route.path === '/404') {
       return false
     }
     return true

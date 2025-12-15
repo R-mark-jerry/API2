@@ -94,12 +94,12 @@ const routes = [
   {
     path: '/404',
     component: () => import('@/views/error/404.vue'),
-    meta: { title: '404', requiresAuth: false }
+    meta: { title: '404', requiresAuth: false, hidden: true }
   },
   {
     path: '/:pathMatch(.*)*',
     redirect: '/404',
-    meta: { requiresAuth: false }
+    meta: { requiresAuth: false, hidden: true }
   }
 ]
 
