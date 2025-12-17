@@ -186,7 +186,7 @@ function getModuleTree() {
 /** 查询应用列表 */
 function getAppList() {
   listApp({}).then(response => {
-    appOptions.value = response.data
+    appOptions.value = response.data.records || response.data || []
   })
 }
 

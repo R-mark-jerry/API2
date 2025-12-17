@@ -1,5 +1,6 @@
 package com.myruoyi.system.entity;
 
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.fasterxml.jackson.annotation.JsonFormat;
@@ -102,5 +103,6 @@ public class SysUser extends BaseEntity {
      * 部门ID
      */
     @Schema(description = "部门ID")
+    @TableField(exist = false)
     private Long deptId;
 }

@@ -3,7 +3,7 @@ import request from '@/utils/request'
 // 查询API应用列表
 export function listApp(query) {
   return request({
-    url: '/api/app/page',
+    url: '/app/page',
     method: 'get',
     params: {
       pageNum: query.pageNum || 1,
@@ -19,7 +19,7 @@ export function listApp(query) {
 // 分页查询API应用列表
 export function pageApp(query) {
   return request({
-    url: '/api/app/page',
+    url: '/app/page',
     method: 'get',
     params: query
   })
@@ -28,7 +28,7 @@ export function pageApp(query) {
 // 查询API应用详细
 export function getApp(appId) {
   return request({
-    url: '/api/app/' + appId,
+    url: '/app/' + appId,
     method: 'get'
   })
 }
@@ -36,7 +36,7 @@ export function getApp(appId) {
 // 新增API应用
 export function addApp(data) {
   return request({
-    url: '/api/app',
+    url: '/app',
     method: 'post',
     data: data
   })
@@ -45,7 +45,7 @@ export function addApp(data) {
 // 修改API应用
 export function updateApp(data) {
   return request({
-    url: '/api/app',
+    url: '/app',
     method: 'put',
     data: data
   })
@@ -54,7 +54,7 @@ export function updateApp(data) {
 // 删除API应用
 export function delApp(appIds) {
   return request({
-    url: '/api/app/' + appIds,
+    url: '/app/' + appIds,
     method: 'delete'
   })
 }
@@ -62,8 +62,37 @@ export function delApp(appIds) {
 // 修改应用状态
 export function changeAppStatus(data) {
   return request({
-    url: '/api/app/changeStatus',
+    url: '/app/changeStatus',
     method: 'put',
     data: data
+  })
+}
+
+// 导出API应用
+export function exportApp(query) {
+  return request({
+    url: '/app/export',
+    method: 'post',
+    data: query,
+    responseType: 'blob'
+  })
+}
+
+// 导入API应用
+export function importApp(data) {
+  return request({
+    url: '/app/import',
+    method: 'post',
+    data: data,
+    headers: { 'Content-Type': 'multipart/form-data' }
+  })
+}
+
+// 下载应用导入模板
+export function importTemplate() {
+  return request({
+    url: '/app/importTemplate',
+    method: 'post',
+    responseType: 'blob'
   })
 }

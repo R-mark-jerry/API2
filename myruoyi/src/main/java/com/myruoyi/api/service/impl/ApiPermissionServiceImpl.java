@@ -28,6 +28,20 @@ public class ApiPermissionServiceImpl extends ServiceImpl<ApiPermissionMapper, A
     }
 
     @Override
+    public com.baomidou.mybatisplus.core.metadata.IPage<ApiPermission> selectApiPermissionPage(
+            com.baomidou.mybatisplus.extension.plugins.pagination.Page<ApiPermission> page,
+            ApiPermission apiPermission) {
+        LambdaQueryWrapper<ApiPermission> wrapper = new LambdaQueryWrapper<>();
+        // 这里需要根据实际字段设置查询条件
+        // wrapper.eq(StringUtils.hasText(appName), ApiPermission::getAppName, appName);
+        // wrapper.eq(StringUtils.hasText(permissionType), ApiPermission::getPermissionType, permissionType);
+        // wrapper.eq(StringUtils.hasText(status), ApiPermission::getStatus, status);
+        wrapper.orderByDesc(ApiPermission::getCreateTime);
+        
+        return page(page, wrapper);
+    }
+
+    @Override
     public List<ApiPermission> selectApiPermissionList(ApiPermission apiPermission) {
         LambdaQueryWrapper<ApiPermission> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(apiPermission.getApiId() != null, ApiPermission::getApiId, apiPermission.getApiId())

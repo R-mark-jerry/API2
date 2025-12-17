@@ -13,7 +13,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import jakarta.servlet.http.HttpServletResponse;
 import java.util.List;
 
 /**
@@ -45,18 +47,7 @@ public class ApiAppController {
             @Parameter(description = "负责人姓名") @RequestParam(required = false) String ownerName,
             @Parameter(description = "状态") @RequestParam(required = false) String status) {
         
-        Page<ApiApp> page = new Page<>(pageNum, pageSize);
-        ApiApp query = new ApiApp();
-        query.setAppCode(appCode);
-        query.setAppName(appName);
-        query.setOwnerName(ownerName);
-        query.setStatus(status);
-        
-        List<ApiApp> list = apiAppService.selectApiAppList(query);
-        page.setRecords(list);
-        page.setTotal(list.size());
-        
-        return Result.success(page);
+        return Result.success(apiAppService.selectApiAppPage(pageNum, pageSize, appCode, appName, ownerName, status));
     }
 
     /**
@@ -88,6 +79,11 @@ public class ApiAppController {
     @PostMapping
     @PreAuthorize("hasAuthority('api:app:add')")
     public Result<Void> add(@Validated @RequestBody ApiApp apiApp) {
+        // 检查应用权限
+        if (!checkAppPermission(apiApp, "add")) {
+            return Result.error("您没有权限在该应用下进行操作");
+        }
+        
         // 设置负责人信息
         if (apiApp.getOwnerId() != null) {
             String ownerName = sysUserService.selectUserNameById(apiApp.getOwnerId());
@@ -105,6 +101,11 @@ public class ApiAppController {
     @PutMapping
     @PreAuthorize("hasAuthority('api:app:edit')")
     public Result<Void> edit(@Validated @RequestBody ApiApp apiApp) {
+        // 检查应用权限
+        if (!checkAppPermission(apiApp, "edit")) {
+            return Result.error("您没有权限在该应用下进行操作");
+        }
+        
         // 设置负责人信息
         if (apiApp.getOwnerId() != null) {
             String ownerName = sysUserService.selectUserNameById(apiApp.getOwnerId());
@@ -122,6 +123,15 @@ public class ApiAppController {
     @DeleteMapping("/{appIds}")
     @PreAuthorize("hasAuthority('api:app:remove')")
     public Result<Void> remove(@PathVariable Long[] appIds) {
+        // 检查应用权限
+        for (Long appId : appIds) {
+            ApiApp apiApp = new ApiApp();
+            apiApp.setAppId(appId);
+            if (!checkAppPermission(apiApp, "delete")) {
+                return Result.error("您没有权限删除应用ID为" + appId + "的应用");
+            }
+        }
+        
         apiAppService.deleteApiAppByAppIds(appIds);
         return Result.success();
     }
@@ -133,7 +143,95 @@ public class ApiAppController {
     @PutMapping("/changeStatus")
     @PreAuthorize("hasAuthority('api:app:edit')")
     public Result<Void> changeStatus(@RequestBody ApiApp apiApp) {
+        // 检查应用权限
+        if (!checkAppPermission(apiApp, "edit")) {
+            return Result.error("您没有权限在该应用下进行操作");
+        }
+        
         apiAppService.changeStatus(apiApp);
         return Result.success();
+    }
+
+    /**
+     * 导出API应用列表
+     */
+    @Operation(summary = "导出API应用列表")
+    @PostMapping("/export")
+    @PreAuthorize("hasAuthority('api:app:export')")
+    public void export(HttpServletResponse response, ApiApp apiApp) {
+        apiAppService.exportApp(response, apiApp);
+    }
+
+    /**
+     * 导入API应用数据
+     */
+    @Operation(summary = "导入API应用数据")
+    @PostMapping("/import")
+    @PreAuthorize("hasAuthority('api:app:import')")
+    public Result<Void> importData(@RequestParam("file") MultipartFile file) {
+        try {
+            apiAppService.importApp(file);
+            return Result.success();
+        } catch (Exception e) {
+            return Result.error("导入失败：" + e.getMessage());
+        }
+    }
+
+    /**
+     * 获取应用导入模板
+     */
+    @Operation(summary = "获取应用导入模板")
+    @PostMapping("/importTemplate")
+    public void importTemplate(HttpServletResponse response) {
+        apiAppService.importTemplate(response);
+    }
+
+    /**
+     * 检查应用权限
+     *
+     * @param apiApp 应用信息
+     * @param operation 操作类型
+     * @return 是否有权限
+     */
+    private boolean checkAppPermission(ApiApp apiApp, String operation) {
+        // 获取当前用户
+        var currentUser = sysUserService.getCurrentUser();
+        if (currentUser == null) {
+            return false;
+        }
+        
+        // 超级管理员拥有所有权限
+        if (isAdmin(currentUser)) {
+            return true;
+        }
+        
+        // 检查是否是应用负责人
+        if (apiApp.getAppId() != null) {
+            ApiApp existingApp = apiAppService.selectApiAppByAppId(apiApp.getAppId());
+            if (existingApp != null && existingApp.getOwnerId() != null &&
+                existingApp.getOwnerId().equals(currentUser.getUserId())) {
+                return true;
+            }
+        }
+        
+        // 检查是否是新应用且当前用户被指定为负责人
+        if (apiApp.getAppId() == null && apiApp.getOwnerId() != null &&
+            apiApp.getOwnerId().equals(currentUser.getUserId())) {
+            return true;
+        }
+        
+        return false;
+    }
+
+    /**
+     * 判断是否是管理员
+     *
+     * @param user 用户信息
+     * @return 结果
+     */
+    private boolean isAdmin(com.myruoyi.system.entity.SysUser user) {
+        // 这里可以根据实际业务逻辑判断，比如检查用户角色
+        // 简化处理，假设用户ID为1的是管理员
+        return user.getUserId() != null && user.getUserId() == 1L;
     }
 }

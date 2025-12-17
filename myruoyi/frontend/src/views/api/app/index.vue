@@ -60,7 +60,57 @@
           @click="handleDelete"
         >删除</el-button>
       </el-col>
+      <el-col :span="1.5">
+        <el-button
+          type="warning"
+          plain
+          icon="Download"
+          @click="handleExport"
+        >导出</el-button>
+      </el-col>
+      <el-col :span="1.5">
+        <el-button
+          type="info"
+          plain
+          icon="Upload"
+          @click="handleImport"
+        >导入</el-button>
+      </el-col>
     </el-row>
+
+    <!-- 导入对话框 -->
+    <el-dialog title="导入API应用" v-model="importOpen" width="400px" append-to-body>
+      <el-upload
+        ref="uploadRef"
+        :limit="1"
+        accept=".csv, .xls, .xlsx"
+        :headers="uploadHeaders"
+        :action="uploadUrl"
+        :disabled="upload.isUploading"
+        :on-progress="handleFileUploadProgress"
+        :on-success="handleFileSuccess"
+        :auto-upload="false"
+        drag
+      >
+        <i class="el-icon-upload"></i>
+        <div class="el-upload__text">将文件拖到此处，或<em>点击上传</em></div>
+        <template #tip>
+          <div class="el-upload__tip">
+            <el-checkbox v-model="upload.updateSupport" />是否更新已经存在的应用数据
+            <span>仅允许导入xls、xlsx或csv格式文件。</span>
+          </div>
+        </template>
+      </el-upload>
+      <template #footer>
+        <div class="dialog-footer">
+          <el-button type="primary" @click="submitFileForm">确 定</el-button>
+          <el-button @click="upload.file = []">取 消</el-button>
+          <el-button type="info" @click="downloadTemplate">
+            下载模板
+          </el-button>
+        </div>
+      </template>
+    </el-dialog>
 
     <el-table v-loading="loading" :data="appList" @selection-change="handleSelectionChange">
       <el-table-column type="selection" width="55" align="center" />
@@ -127,7 +177,22 @@
           <el-input v-model="form.appVersion" placeholder="请输入应用版本" />
         </el-form-item>
         <el-form-item label="负责人" prop="ownerId">
-          <el-input v-model="form.ownerId" placeholder="请输入负责人ID" />
+          <el-select
+            v-model="form.ownerId"
+            placeholder="请选择负责人"
+            clearable
+            filterable
+            remote
+            :remote-method="searchUsers"
+            :loading="userLoading"
+          >
+            <el-option
+              v-for="user in userOptions"
+              :key="user.userId"
+              :label="user.nickName + '(' + user.userName + ')'"
+              :value="user.userId"
+            />
+          </el-select>
         </el-form-item>
         <el-form-item label="状态" prop="status">
           <el-radio-group v-model="form.status">
@@ -151,7 +216,8 @@
 
 <script setup>
 import { ref, onMounted, reactive, toRefs, getCurrentInstance } from 'vue'
-import { listApp, getApp, delApp, addApp, updateApp, changeAppStatus } from '@/api/app'
+import { listApp, getApp, delApp, addApp, updateApp, changeAppStatus, exportApp, importApp, importTemplate } from '@/api/app'
+import { pageUser } from '@/api/system/user'
 import { parseTime } from '@/utils/ruoyi'
 
 const { proxy } = getCurrentInstance()
@@ -169,6 +235,19 @@ const statusOptions = ref([
   { label: '正常', value: '0' },
   { label: '停用', value: '1' }
 ])
+const userOptions = ref([])
+const userLoading = ref(false)
+const importOpen = ref(false)
+const upload = reactive({
+  // 是否禁用上传
+  isUploading: false,
+  // 是否更新已经存在的应用数据
+  updateSupport: 0,
+  // 设置上传的请求头部
+  headers: { Authorization: 'Bearer ' + localStorage.getItem('token') },
+  // 上传的地址
+  url: import.meta.env.VITE_APP_BASE_API + '/app/import'
+})
 
 const data = reactive({
   form: {},
@@ -285,10 +364,14 @@ function submitForm() {
 /** 删除按钮操作 */
 function handleDelete(row) {
   const _appIds = row.appId || ids.value
-  proxy.$modal.confirm('是否确认删除API应用编号为"' + _appIds + '"的数据项？').then(function() {
+  const appNames = row.appName || appList.value.filter(item => _appIds.includes(item.appId)).map(item => item.appName).join(', ')
+  proxy.$modal.confirm('是否确认删除应用"' + appNames + '"？删除后不可恢复！').then(function() {
+    loading.value = true
     return delApp(_appIds).then(() => {
-      getList()
       proxy.$modal.msgSuccess("删除成功")
+      getList()
+    }).finally(() => {
+      loading.value = false
     })
   }).catch(() => {})
 }
@@ -296,16 +379,134 @@ function handleDelete(row) {
 /** 状态修改 */
 function handleStatusChange(row) {
   let text = row.status === "0" ? "启用" : "停用"
-  proxy.$modal.confirm('确认要"' + text + '""' + row.appName + '"应用吗？').then(function() {
+  let confirmText = row.status === "0" ?
+    "确认要停用应用\"" + row.appName + "\"吗？停用后应用将不可访问。" :
+    "确认要启用应用\"" + row.appName + "\"吗？启用后应用将恢复正常访问。"
+    
+  proxy.$modal.confirm(confirmText).then(function() {
+    loading.value = true
     return changeAppStatus(row).then(() => {
       proxy.$modal.msgSuccess(text + "成功")
+    }).finally(() => {
+      loading.value = false
     })
   }).catch(function() {
     row.status = row.status === "0" ? "1" : "0"
   })
 }
 
+/** 搜索用户 */
+function searchUsers(query) {
+  if (query !== '') {
+    userLoading.value = true
+    // 使用分页接口而不是列表接口
+    pageUser({ pageNum: 1, pageSize: 20, userName: query }).then(response => {
+      userOptions.value = response.data.records || response.data || []
+      userLoading.value = false
+    })
+  } else {
+    userOptions.value = []
+  }
+}
+
+/** 导出按钮操作 */
+function handleExport() {
+  proxy.$modal.confirm('是否确认导出所有API应用数据项？').then(() => {
+    loading.value = true
+    return exportApp(queryParams.value)
+  }).then(response => {
+    const blob = new Blob([response], { type: 'application/vnd.ms-excel' })
+    const url = window.URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = 'API应用数据.csv'
+    a.click()
+    window.URL.revokeObjectURL(url)
+    proxy.$modal.msgSuccess("导出成功")
+    loading.value = false
+  }).catch(() => {
+    loading.value = false
+  })
+}
+
+/** 导入按钮操作 */
+function handleImport() {
+  importOpen.value = true
+  upload.updateSupport = false
+  upload.isUploading = false
+}
+
+/** 下载模板操作 */
+function downloadTemplate() {
+  loading.value = true
+  importTemplate().then(response => {
+    const blob = new Blob([response], { type: 'application/vnd.ms-excel' })
+    const url = window.URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = 'API应用导入模板.csv'
+    a.click()
+    window.URL.revokeObjectURL(url)
+    proxy.$modal.msgSuccess("模板下载成功")
+    loading.value = false
+  }).catch(error => {
+    proxy.$modal.msgError("模板下载失败：" + (error.message || "未知错误"))
+    loading.value = false
+  })
+}
+
+/** 文件上传中处理 */
+const handleFileUploadProgress = (event, file, fileList) => {
+  upload.isUploading = true
+}
+
+/** 文件上传成功处理 */
+const handleFileSuccess = (response, file, fileList) => {
+  importOpen.value = false
+  upload.isUploading = false
+  getList()
+  
+  if (response.code === 200) {
+    proxy.$modal.msgSuccess("导入成功")
+    if (response.data && response.data.successCount > 0) {
+      proxy.$alert("<div style='overflow: auto;overflow-x: hidden;max-height: 70vh;padding: 10px 20px 0;'>" +
+        "导入完成！<br/>" +
+        "成功导入：" + response.data.successCount + " 条<br/>" +
+        "更新数据：" + response.data.updateCount + " 条<br/>" +
+        "失败数据：" + response.data.failCount + " 条<br/>" +
+        (response.data.failList && response.data.failList.length > 0 ?
+          "失败详情：<br/>" + response.data.failList.join('<br/>') : '') +
+        "</div>", "导入结果", { dangerouslyUseHTMLString: true })
+    }
+  } else {
+    proxy.$modal.msgError(response.msg || "导入失败")
+  }
+}
+
+/** 提交上传文件 */
+function submitFileForm() {
+  const files = proxy.$refs.uploadRef.uploadFiles
+  if (!files || files.length === 0) {
+    proxy.$modal.msgWarning("请选择要导入的文件")
+    return
+  }
+  
+  const file = files[0]
+  const fileExt = file.name.substring(file.name.lastIndexOf('.')).toLowerCase()
+  if (!['.csv', '.xls', '.xlsx'].includes(fileExt)) {
+    proxy.$modal.msgError("文件格式错误，请上传CSV、XLS或XLSX格式的文件")
+    return
+  }
+  
+  upload.isUploading = true
+  proxy.$refs.uploadRef.submit()
+}
+
 onMounted(() => {
   getList()
+  // 初始化用户列表
+  pageUser({ pageNum: 1, pageSize: 20 }).then(response => {
+    userOptions.value = response.data.records || response.data || []
+  })
 })
 </script>

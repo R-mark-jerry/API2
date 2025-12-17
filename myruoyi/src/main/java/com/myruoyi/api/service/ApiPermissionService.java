@@ -22,6 +22,17 @@ public interface ApiPermissionService extends IService<ApiPermission> {
     ApiPermission selectApiPermissionByPermissionId(Long permissionId);
 
     /**
+     * 分页查询API权限
+     *
+     * @param page 分页参数
+     * @param apiPermission 查询条件
+     * @return 分页结果
+     */
+    com.baomidou.mybatisplus.core.metadata.IPage<ApiPermission> selectApiPermissionPage(
+            com.baomidou.mybatisplus.extension.plugins.pagination.Page<ApiPermission> page,
+            ApiPermission apiPermission);
+
+    /**
      * 查询API权限列表
      *
      * @param apiPermission API权限

@@ -3,7 +3,7 @@ import request from '@/utils/request'
 // 查询API接口列表
 export function listInfo(query) {
   return request({
-    url: '/api/info/page',
+    url: '/info/page',
     method: 'get',
     params: {
       pageNum: query.pageNum || 1,
@@ -22,7 +22,7 @@ export function listInfo(query) {
 // 分页查询API接口列表
 export function pageInfo(query) {
   return request({
-    url: '/api/info/page',
+    url: '/info/page',
     method: 'get',
     params: query
   })
@@ -31,7 +31,7 @@ export function pageInfo(query) {
 // 根据应用ID查询接口列表
 export function getApisByAppId(appId) {
   return request({
-    url: '/api/info/app/' + appId,
+    url: '/info/app/' + appId,
     method: 'get'
   })
 }
@@ -39,7 +39,7 @@ export function getApisByAppId(appId) {
 // 根据模块ID查询接口列表
 export function getApisByModuleId(moduleId) {
   return request({
-    url: '/api/info/module/' + moduleId,
+    url: '/info/module/' + moduleId,
     method: 'get'
   })
 }
@@ -47,7 +47,7 @@ export function getApisByModuleId(moduleId) {
 // 查询API接口详细
 export function getInfo(apiId) {
   return request({
-    url: '/api/info/' + apiId,
+    url: '/info/' + apiId,
     method: 'get'
   })
 }
@@ -55,7 +55,7 @@ export function getInfo(apiId) {
 // 新增API接口
 export function addInfo(data) {
   return request({
-    url: '/api/info',
+    url: '/info',
     method: 'post',
     data: data
   })
@@ -64,7 +64,7 @@ export function addInfo(data) {
 // 修改API接口
 export function updateInfo(data) {
   return request({
-    url: '/api/info',
+    url: '/info',
     method: 'put',
     data: data
   })
@@ -73,7 +73,7 @@ export function updateInfo(data) {
 // 删除API接口
 export function delInfo(apiIds) {
   return request({
-    url: '/api/info/' + apiIds,
+    url: '/info/' + apiIds,
     method: 'delete'
   })
 }
@@ -81,7 +81,7 @@ export function delInfo(apiIds) {
 // 修改API状态
 export function changeApiStatus(data) {
   return request({
-    url: '/api/info/changeApiStatus',
+    url: '/info/changeApiStatus',
     method: 'put',
     data: data
   })
@@ -90,7 +90,7 @@ export function changeApiStatus(data) {
 // 修改发布状态
 export function changePublishStatus(data) {
   return request({
-    url: '/api/info/changePublishStatus',
+    url: '/info/changePublishStatus',
     method: 'put',
     data: data
   })

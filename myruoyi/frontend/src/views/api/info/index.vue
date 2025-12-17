@@ -353,14 +353,14 @@ function getList() {
 /** 查询应用列表 */
 function getAppList() {
   listApp({}).then(response => {
-    appOptions.value = response.data
+    appOptions.value = response.data.records || response.data || []
   })
 }
 
 /** 查询模块列表 */
 function getModuleList() {
   listModule({}).then(response => {
-    moduleOptions.value = response.data
+    moduleOptions.value = response.data || []
   })
 }
 

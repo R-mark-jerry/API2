@@ -160,13 +160,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
 
     @Override
     public IPage<SysUser> selectUserPage(Page<SysUser> page, String userName, String phonenumber, String status) {
-        LambdaQueryWrapper<SysUser> wrapper = new LambdaQueryWrapper<>();
-        wrapper.like(StringUtils.hasText(userName), SysUser::getUserName, userName)
-               .like(StringUtils.hasText(phonenumber), SysUser::getPhonenumber, phonenumber)
-               .eq(StringUtils.hasText(status), SysUser::getStatus, status)
-               .orderByDesc(SysUser::getCreateTime);
-        
-        return baseMapper.selectPage(page, wrapper);
+        return baseMapper.selectPage(page, userName, phonenumber, status);
     }
 
     /**

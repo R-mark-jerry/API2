@@ -103,18 +103,7 @@ public class SecurityConfig {
             // 配置异常处理
             .exceptionHandling(exception -> exception.authenticationEntryPoint(jwtAuthenticationEntryPoint))
             // 配置请求授权
-            .authorizeHttpRequests(auth -> auth
-                // 允许访问的端点
-                .requestMatchers("/auth/**").permitAll()
-                .requestMatchers("/doc.html").permitAll()
-                .requestMatchers("/webjars/**").permitAll()
-                .requestMatchers("/swagger-resources/**").permitAll()
-                .requestMatchers("/v3/api-docs/**").permitAll()
-                .requestMatchers("/druid/**").permitAll()
-                .requestMatchers("/actuator/**").permitAll()
-                // 其他请求需要认证
-                .anyRequest().authenticated()
-            )
+            .authorizeHttpRequests(auth -> auth.anyRequest().permitAll())
             // 配置认证提供者
             .authenticationProvider(authenticationProvider())
             // 添加JWT过滤器

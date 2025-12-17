@@ -28,6 +28,30 @@ public class ApiPermissionController {
     private final ApiPermissionService apiPermissionService;
 
     /**
+     * 分页查询API权限列表
+     */
+    @Operation(summary = "分页查询API权限列表")
+    @GetMapping("/page")
+    @PreAuthorize("hasAuthority('api:permission:list')")
+    public Result<com.baomidou.mybatisplus.core.metadata.IPage<ApiPermission>> page(
+            @Parameter(description = "页码", example = "1") @RequestParam(defaultValue = "1") Integer pageNum,
+            @Parameter(description = "页大小", example = "10") @RequestParam(defaultValue = "10") Integer pageSize,
+            @Parameter(description = "应用名称") @RequestParam(required = false) String appName,
+            @Parameter(description = "权限类型") @RequestParam(required = false) String permissionType,
+            @Parameter(description = "状态") @RequestParam(required = false) String status) {
+        
+        com.baomidou.mybatisplus.extension.plugins.pagination.Page<ApiPermission> page = new com.baomidou.mybatisplus.extension.plugins.pagination.Page<>(pageNum, pageSize);
+        ApiPermission query = new ApiPermission();
+        // 这里需要根据实际字段设置查询条件
+        // query.setAppName(appName);
+        // query.setPermissionType(permissionType);
+        // query.setStatus(status);
+        
+        com.baomidou.mybatisplus.core.metadata.IPage<ApiPermission> result = apiPermissionService.selectApiPermissionPage(page, query);
+        return Result.success(result);
+    }
+
+    /**
      * 查询API权限列表
      */
     @Operation(summary = "查询API权限列表")

@@ -21,4 +21,81 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         <result property="deleted"           column="deleted"           />
     </resultMap>
 
+    <sql id="selectApiAppVo">
+        select app_id, app_code, app_name, app_desc, app_version, owner_id, owner_name, status, create_by, create_time, update_by, update_time, remark, deleted from api_app
+    </sql>
+
+    <select id="selectApiAppList" parameterType="ApiApp" resultMap="ApiAppResult">
+        <include refid="selectApiAppVo"/>
+        <where>
+            <if test="appCode != null  and appCode != ''"> and app_code like concat('%', #{appCode}, '%')</if>
+            <if test="appName != null  and appName != ''"> and app_name like concat('%', #{appName}, '%')</if>
+            <if test="ownerName != null  and ownerName != ''"> and owner_name like concat('%', #{ownerName}, '%')</if>
+            <if test="status != null  and status != ''"> and status = #{status}</if>
+            and deleted = 0
+        </where>
+        order by create_time desc
+    </select>
+    
+    <select id="selectApiAppByAppId" parameterType="Long" resultMap="ApiAppResult">
+        <include refid="selectApiAppVo"/>
+        where app_id = #{appId} and deleted = 0
+    </select>
+        
+    <insert id="insertApiApp" parameterType="ApiApp" useGeneratedKeys="true" keyProperty="appId">
+        insert into api_app
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="appCode != null and appCode != ''">app_code,</if>
+            <if test="appName != null and appName != ''">app_name,</if>
+            <if test="appDesc != null">app_desc,</if>
+            <if test="appVersion != null">app_version,</if>
+            <if test="ownerId != null">owner_id,</if>
+            <if test="ownerName != null and ownerName != ''">owner_name,</if>
+            <if test="status != null">status,</if>
+            <if test="createBy != null">create_by,</if>
+            <if test="remark != null">remark,</if>
+            create_time
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="appCode != null and appCode != ''">#{appCode},</if>
+            <if test="appName != null and appName != ''">#{appName},</if>
+            <if test="appDesc != null">#{appDesc},</if>
+            <if test="appVersion != null">#{appVersion},</if>
+            <if test="ownerId != null">#{ownerId},</if>
+            <if test="ownerName != null and ownerName != ''">#{ownerName},</if>
+            <if test="status != null">#{status},</if>
+            <if test="createBy != null">#{createBy},</if>
+            <if test="remark != null">#{remark},</if>
+            sysdate()
+         </trim>
+    </insert>
+
+    <update id="updateApiApp" parameterType="ApiApp">
+        update api_app
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="appCode != null and appCode != ''">app_code = #{appCode},</if>
+            <if test="appName != null and appName != ''">app_name = #{appName},</if>
+            <if test="appDesc != null">app_desc = #{appDesc},</if>
+            <if test="appVersion != null">app_version = #{appVersion},</if>
+            <if test="ownerId != null">owner_id = #{ownerId},</if>
+            <if test="ownerName != null">owner_name = #{ownerName},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+            <if test="remark != null">remark = #{remark},</if>
+            update_time = sysdate()
+        </trim>
+        where app_id = #{appId}
+    </update>
+
+    <delete id="deleteApiAppByAppId" parameterType="Long">
+        update api_app set deleted = 1 where app_id = #{appId}
+    </delete>
+
+    <delete id="deleteApiAppByAppIds" parameterType="String">
+        update api_app set deleted = 1 where app_id in
+        <foreach item="appId" collection="array" open="(" separator="," close=")">
+            #{appId}
+        </foreach>
+    </delete>
+
 </mapper>

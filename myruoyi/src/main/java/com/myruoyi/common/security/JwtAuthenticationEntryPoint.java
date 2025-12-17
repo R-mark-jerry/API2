@@ -7,6 +7,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.AuthenticationEntryPoint;
@@ -24,6 +25,9 @@ import java.io.IOException;
 @Component
 public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
 
+    @Autowired
+    private ObjectMapper objectMapper;
+
     @Override
     public void commence(HttpServletRequest request, HttpServletResponse response,
                      AuthenticationException authException) throws IOException, ServletException {
@@ -36,9 +40,7 @@ public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
         
         Result<Object> result = Result.error(ResultCode.UNAUTHORIZED);
         
-        ObjectMapper mapper = new ObjectMapper();
-        // 禁用WRITE_DATES_AS_TIMESTAMPS，避免将日期写为时间戳
-        mapper.disable(com.fasterxml.jackson.databind.SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
-        mapper.writeValue(response.getOutputStream(), result);
+        // 使用Spring注入的ObjectMapper，已经配置了JavaTimeModule
+        objectMapper.writeValue(response.getOutputStream(), result);
     }
 }

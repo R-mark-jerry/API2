@@ -1,6 +1,8 @@
 package com.myruoyi.system.mapper;
 
+import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.myruoyi.system.entity.SysUser;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
@@ -55,4 +57,16 @@ public interface SysUserMapper extends BaseMapper<SysUser> {
      * @return 部门名称
      */
     String selectDeptNameByUserId(@Param("userId") Long userId);
+
+    /**
+     * 分页查询用户列表
+     *
+     * @param page        分页参数
+     * @param userName    用户名
+     * @param phonenumber 手机号
+     * @param status      状态
+     * @return 用户分页列表
+     */
+    IPage<SysUser> selectPage(Page<SysUser> page, @Param("userName") String userName,
+                             @Param("phonenumber") String phonenumber, @Param("status") String status);
 }
