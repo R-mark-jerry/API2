@@ -72,6 +72,9 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
         // 加密密码
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         
+        // 设置部门ID为null，因为deptId字段不映射到数据库
+        user.setDeptId(null);
+        
         return baseMapper.insert(user);
     }
 
