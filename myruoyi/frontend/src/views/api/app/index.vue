@@ -35,12 +35,7 @@
 
     <el-row :gutter="10" class="mb8">
       <el-col :span="1.5">
-        <el-button
-          type="primary"
-          plain
-          icon="Plus"
-          @click="handleAdd"
-        >新增</el-button>
+        <el-button type="primary" plain icon="Plus" @click="handleAdd">新增</el-button>
       </el-col>
       <el-col :span="1.5">
         <el-button
@@ -206,7 +201,7 @@
       </el-form>
       <template #footer>
         <div class="dialog-footer">
-          <el-button type="primary" @click="submitForm">确 定</el-button>
+          <el-button type="primary" @click="submitForm">确定</el-button>
           <el-button @click="cancel">取 消</el-button>
         </div>
       </template>
@@ -219,6 +214,8 @@ import { ref, onMounted, reactive, toRefs, getCurrentInstance } from 'vue'
 import { listApp, getApp, delApp, addApp, updateApp, changeAppStatus, exportApp, importApp, importTemplate } from '@/api/app'
 import { pageUser } from '@/api/system/user'
 import { parseTime } from '@/utils/ruoyi'
+
+console.log('App component script setup executed')
 
 const { proxy } = getCurrentInstance()
 
@@ -300,7 +297,8 @@ function reset() {
     ownerId: undefined,
     status: "0"
   }
-  proxy.resetForm("appRef")
+  // 注释掉这行，因为它可能会干扰对话框的显示
+  // proxy.resetForm("appRef")
 }
 
 /** 搜索按钮操作 */
@@ -329,6 +327,7 @@ function handleAdd() {
   title.value = "添加API应用"
 }
 
+
 /** 修改按钮操作 */
 function handleUpdate(row) {
   reset()
@@ -349,12 +348,18 @@ function submitForm() {
           proxy.$modal.msgSuccess("修改成功")
           open.value = false
           getList()
+        }).catch(error => {
+          console.error('更新应用失败:', error)
+          proxy.$modal.msgError("更新失败：" + (error.message || "未知错误"))
         })
       } else {
         addApp(form.value).then(response => {
           proxy.$modal.msgSuccess("新增成功")
           open.value = false
           getList()
+        }).catch(error => {
+          console.error('新增应用失败:', error)
+          proxy.$modal.msgError("新增失败：" + (error.message || "未知错误"))
         })
       }
     }

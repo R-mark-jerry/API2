@@ -79,13 +79,15 @@ public class ApiAppController {
     @PostMapping
     @PreAuthorize("hasAuthority('api:app:add')")
     public Result<Void> add(@Validated @RequestBody ApiApp apiApp) {
-        // 检查应用权限
-        if (!checkAppPermission(apiApp, "add")) {
-            return Result.error("您没有权限在该应用下进行操作");
-        }
-        
-        // 设置负责人信息
-        if (apiApp.getOwnerId() != null) {
+        // 如果没有指定负责人，则设置为当前用户
+        if (apiApp.getOwnerId() == null) {
+            var currentUser = sysUserService.getCurrentUser();
+            if (currentUser != null) {
+                apiApp.setOwnerId(currentUser.getUserId());
+                apiApp.setOwnerName(currentUser.getUserName());
+            }
+        } else {
+            // 设置负责人信息
             String ownerName = sysUserService.selectUserNameById(apiApp.getOwnerId());
             apiApp.setOwnerName(ownerName);
         }

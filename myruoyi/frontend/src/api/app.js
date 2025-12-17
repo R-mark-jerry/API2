@@ -16,6 +16,15 @@ export function listApp(query) {
   })
 }
 
+// 查询API应用列表（不分页）
+export function listAppNoPage(query) {
+  return request({
+    url: '/app/list',
+    method: 'get',
+    params: query
+  })
+}
+
 // 分页查询API应用列表
 export function pageApp(query) {
   return request({
