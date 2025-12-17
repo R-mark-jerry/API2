@@ -389,7 +389,8 @@ function reset() {
     apiStatus: "0",
     publishStatus: "0"
   }
-  proxy.resetForm("infoRef")
+  // 注释掉这行，因为它可能会干扰对话框的显示
+  // proxy.resetForm("infoRef")
 }
 
 /** 搜索按钮操作 */

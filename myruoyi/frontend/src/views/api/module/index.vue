@@ -207,7 +207,8 @@ function reset() {
     moduleDesc: undefined,
     orderNum: 0
   }
-  proxy.resetForm("moduleRef")
+  // 注释掉这行，因为它可能会干扰对话框的显示
+  // proxy.resetForm("moduleRef")
 }
 
 /** 搜索按钮操作 */
