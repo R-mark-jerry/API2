@@ -53,7 +53,7 @@ public class ApiModuleServiceImpl extends ServiceImpl<ApiModuleMapper, ApiModule
     }
 
     @Override
-    public int insertApiModule(ApiModule apiModule) {
+    public ApiModule insertApiModule(ApiModule apiModule) {
         // 检查模块编码是否重复
         LambdaQueryWrapper<ApiModule> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(ApiModule::getAppId, apiModule.getAppId())
@@ -72,7 +72,18 @@ public class ApiModuleServiceImpl extends ServiceImpl<ApiModuleMapper, ApiModule
             apiModule.setOrderNum(lastModule != null ? lastModule.getOrderNum() + 1 : 1);
         }
         
-        return save(apiModule) ? 1 : 0;
+        boolean success = save(apiModule);
+        if (!success) {
+            throw new BusinessException("保存模块失败");
+        }
+        
+        // 查询并返回保存的对象，包括自动生成的ID
+        LambdaQueryWrapper<ApiModule> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(ApiModule::getAppId, apiModule.getAppId())
+                   .eq(ApiModule::getModuleCode, apiModule.getModuleCode())
+                   .orderByDesc(ApiModule::getCreateTime)
+                   .last("LIMIT 1");
+        return getOne(queryWrapper);
     }
 
     @Override

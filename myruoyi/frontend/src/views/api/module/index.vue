@@ -87,7 +87,7 @@
     </el-table>
 
     <!-- 添加或修改API模块对话框 -->
-    <el-dialog :title="title" v-model="open" width="500px" append-to-body>
+    <el-dialog :title="title" v-model="open" width="500px" append-to-body @close="handleDialogClose" ref="moduleDialog">
       <el-form ref="moduleRef" :model="form" :rules="rules" label-width="80px">
         <el-form-item label="上级模块" prop="parentId">
           <el-tree-select
@@ -123,7 +123,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, reactive, toRefs, getCurrentInstance } from 'vue'
+import { ref, onMounted, reactive, toRefs, getCurrentInstance, nextTick } from 'vue'
 import { listModule, getModule, delModule, addModule, updateModule, treeModule } from '@/api/module'
 import { listApp } from '@/api/app'
 import { handleTree } from '@/utils/ruoyi'
@@ -247,22 +247,41 @@ function handleUpdate(row) {
 
 /** 提交按钮 */
 function submitForm() {
+  if (!proxy.$refs["moduleRef"]) {
+    console.error('表单引用不存在')
+    proxy.$modal.msgError("表单引用不存在")
+    return
+  }
+  
   proxy.$refs["moduleRef"].validate(valid => {
     if (valid) {
       if (form.value.moduleId != undefined) {
         updateModule(form.value).then(response => {
           proxy.$modal.msgSuccess("修改成功")
-          open.value = false
+          // 强制关闭对话框
+          forceCloseDialog()
           getList()
+        }).catch(error => {
+          console.error('更新模块失败:', error)
+          proxy.$modal.msgError("更新失败：" + (error.message || "未知错误"))
         })
       } else {
         addModule(form.value).then(response => {
           proxy.$modal.msgSuccess("新增成功")
-          open.value = false
+          // 强制关闭对话框
+          forceCloseDialog()
           getList()
+        }).catch(error => {
+          console.error('新增模块失败:', error)
+          proxy.$modal.msgError("新增失败：" + (error.message || "未知错误"))
         })
       }
+    } else {
+      console.log('表单验证失败')
     }
+  }).catch(error => {
+    console.error('表单验证错误:', error)
+    proxy.$modal.msgError("表单验证失败")
   })
 }
 
@@ -292,4 +311,37 @@ onMounted(() => {
   getModuleTree()
   getAppList()
 })
+
+// 强制关闭对话框函数
+function forceCloseDialog() {
+  console.log('forceCloseDialog called')
+  open.value = false
+  reset()
+  
+  // 使用多种方法确保对话框关闭
+  setTimeout(() => {
+    open.value = false
+    // 尝试直接操作DOM
+    const dialog = document.querySelector('.el-dialog')
+    if (dialog) {
+      dialog.style.display = 'none'
+    }
+    // 尝试使用Element Plus的实例方法
+    const dialogInstance = proxy.$refs.moduleDialog
+    if (dialogInstance && dialogInstance.close) {
+      dialogInstance.close()
+    }
+  }, 100)
+  
+  // 强制刷新列表
+  setTimeout(() => {
+    getList()
+  }, 200)
+}
+
+// 对话框关闭事件处理函数
+function handleDialogClose() {
+  open.value = false
+  reset()
+}
 </script>

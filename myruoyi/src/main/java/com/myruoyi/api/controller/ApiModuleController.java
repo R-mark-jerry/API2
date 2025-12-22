@@ -80,9 +80,9 @@ public class ApiModuleController {
     @Operation(summary = "新增API模块")
     @PostMapping
     @PreAuthorize("hasAuthority('api:module:add')")
-    public Result<Void> add(@Validated @RequestBody ApiModule apiModule) {
-        apiModuleService.insertApiModule(apiModule);
-        return Result.success();
+    public Result<ApiModule> add(@Validated @RequestBody ApiModule apiModule) {
+        ApiModule savedModule = apiModuleService.insertApiModule(apiModule);
+        return Result.success(savedModule);
     }
 
     /**

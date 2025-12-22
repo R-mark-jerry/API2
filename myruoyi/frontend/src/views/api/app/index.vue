@@ -157,7 +157,12 @@
     />
 
     <!-- 添加或修改API应用对话框 -->
-    <el-dialog :title="title" v-model="open" width="500px" append-to-body>
+    <el-dialog
+      :title="title"
+      v-model="open"
+      width="500px"
+      append-to-body
+      ref="appDialog">
       <el-form ref="appRef" :model="form" :rules="rules" label-width="80px">
         <el-form-item label="应用编码" prop="appCode">
           <el-input v-model="form.appCode" placeholder="请输入应用编码" />
@@ -210,7 +215,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, reactive, toRefs, getCurrentInstance } from 'vue'
+import { ref, onMounted, reactive, toRefs, getCurrentInstance, nextTick } from 'vue'
 import { listApp, getApp, delApp, addApp, updateApp, changeAppStatus, exportApp, importApp, importTemplate } from '@/api/app'
 import { pageUser } from '@/api/system/user'
 import { parseTime } from '@/utils/ruoyi'
@@ -282,7 +287,10 @@ function getList() {
 
 /** 取消按钮 */
 function cancel() {
+  console.log('cancel called, open.value before:', open.value)
   open.value = false
+  console.log('cancel called, open.value after:', open.value)
+  // 直接重置表单，不需要等待nextTick
   reset()
 }
 
@@ -341,30 +349,94 @@ function handleUpdate(row) {
 
 /** 提交按钮 */
 function submitForm() {
+  console.log('submitForm called, open.value before:', open.value)
+  console.log('submitForm called, form.value:', form.value)
+  
+  if (!proxy.$refs["appRef"]) {
+    console.error('表单引用不存在')
+    proxy.$modal.msgError("表单引用不存在")
+    return
+  }
+  
   proxy.$refs["appRef"].validate(valid => {
+    console.log('validate result:', valid)
     if (valid) {
       if (form.value.appId != undefined) {
+        console.log('updating app')
         updateApp(form.value).then(response => {
-          proxy.$modal.msgSuccess("修改成功")
+          console.log('updateApp success:', response)
+          console.log('response code:', response.code)
+          console.log('response data:', response.data)
+          
+          // 无论响应码是什么，都先关闭对话框
           open.value = false
-          getList()
+          
+          if (response.code === 200) {
+            proxy.$modal.msgSuccess("修改成功")
+            // 延迟刷新列表，确保对话框已关闭
+            setTimeout(() => {
+              getList()
+            }, 500)
+          } else {
+            proxy.$modal.msgError(response.msg || "修改失败")
+            // 即使修改失败，也刷新列表以显示最新状态
+            setTimeout(() => {
+              getList()
+            }, 500)
+          }
         }).catch(error => {
           console.error('更新应用失败:', error)
+          // 即使出现异常，也关闭对话框
+          open.value = false
           proxy.$modal.msgError("更新失败：" + (error.message || "未知错误"))
+          // 刷新列表以显示最新状态
+          setTimeout(() => {
+            getList()
+          }, 500)
         })
       } else {
+        console.log('adding app')
         addApp(form.value).then(response => {
-          proxy.$modal.msgSuccess("新增成功")
+          console.log('addApp success:', response)
+          console.log('response code:', response.code)
+          console.log('response data:', response.data)
+          
+          // 无论响应码是什么，都先关闭对话框
           open.value = false
-          getList()
+          
+          if (response.code === 200) {
+            proxy.$modal.msgSuccess("新增成功")
+            // 延迟刷新列表，确保对话框已关闭
+            setTimeout(() => {
+              getList()
+            }, 500)
+          } else {
+            proxy.$modal.msgError(response.msg || "新增失败")
+            // 即使新增失败，也刷新列表以显示最新状态
+            setTimeout(() => {
+              getList()
+            }, 500)
+          }
         }).catch(error => {
           console.error('新增应用失败:', error)
+          // 即使出现异常，也关闭对话框
+          open.value = false
           proxy.$modal.msgError("新增失败：" + (error.message || "未知错误"))
+          // 刷新列表以显示最新状态
+          setTimeout(() => {
+            getList()
+          }, 500)
         })
       }
+    } else {
+      console.log('表单验证失败')
     }
+  }).catch(error => {
+    console.error('表单验证错误:', error)
+    proxy.$modal.msgError("表单验证失败")
   })
 }
+
 
 /** 删除按钮操作 */
 function handleDelete(row) {
@@ -514,4 +586,13 @@ onMounted(() => {
     userOptions.value = response.data.records || response.data || []
   })
 })
+
+// 对话框关闭事件处理函数
+function handleDialogClose() {
+  console.log('handleDialogClose called, open.value:', open.value)
+  open.value = false
+  // 不需要重置表单，因为对话框会销毁
+  console.log('handleDialogClose finished, open.value set to false')
+}
 </script>
+

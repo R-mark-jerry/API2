@@ -75,6 +75,9 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
         // 设置部门ID为null，因为deptId字段不映射到数据库
         user.setDeptId(null);
         
+        // 设置创建时间
+        user.setCreateTime(LocalDateTime.now());
+        
         return baseMapper.insert(user);
     }
 

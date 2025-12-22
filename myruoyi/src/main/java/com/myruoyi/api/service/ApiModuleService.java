@@ -41,9 +41,9 @@ public interface ApiModuleService extends IService<ApiModule> {
      * 新增API模块
      *
      * @param apiModule API模块
-     * @return 结果
+     * @return 新增的API模块
      */
-    int insertApiModule(ApiModule apiModule);
+    ApiModule insertApiModule(ApiModule apiModule);
 
     /**
      * 修改API模块

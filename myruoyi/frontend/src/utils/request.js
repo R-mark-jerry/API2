@@ -35,7 +35,7 @@ service.interceptors.response.use(
     // 如果响应码不是200，则判断为错误
     if (res.code !== 200) {
       ElMessage({
-        message: res.message || '系统错误',
+        message: res.msg || '系统错误',
         type: 'error',
         duration: 5 * 1000
       })
@@ -58,7 +58,7 @@ service.interceptors.response.use(
         })
       }
       
-      return Promise.reject(new Error(res.message || '系统错误'))
+      return Promise.reject(new Error(res.msg || '系统错误'))
     } else {
       return res
     }

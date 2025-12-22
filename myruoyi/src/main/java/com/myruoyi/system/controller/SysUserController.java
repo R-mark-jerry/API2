@@ -64,9 +64,11 @@ public class SysUserController {
     @Operation(summary = "新增用户")
     @PostMapping
     @PreAuthorize("hasAuthority('system:user:add')")
-    public Result<Void> add(@Validated @RequestBody SysUser user) {
+    public Result<SysUser> add(@Validated @RequestBody SysUser user) {
         userService.insertUser(user);
-        return Result.success();
+        // 插入后查询完整信息返回
+        SysUser savedUser = userService.selectUserById(user.getUserId());
+        return Result.success(savedUser);
     }
 
     /**

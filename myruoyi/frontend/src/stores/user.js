@@ -42,7 +42,7 @@ export const useUserStore = defineStore('user', {
             this.phone = data.phone
             
             // 设置默认权限，实际应该从后端获取
-            this.permissions = ['*:*:*']
+            this.permissions = data.permissions || ['*:*:*']
            
             setToken(data.token)
             resolve(response)

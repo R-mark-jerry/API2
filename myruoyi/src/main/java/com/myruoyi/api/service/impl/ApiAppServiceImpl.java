@@ -81,6 +81,9 @@ public class ApiAppServiceImpl extends ServiceImpl<ApiAppMapper, ApiApp> impleme
             apiApp.setAppVersion("1.0.0");
         }
         
+        // 设置创建时间
+        apiApp.setCreateTime(java.time.LocalDateTime.now());
+        
         return baseMapper.insertApiApp(apiApp);
     }
 
