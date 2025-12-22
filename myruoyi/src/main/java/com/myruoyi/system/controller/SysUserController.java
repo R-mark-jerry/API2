@@ -33,8 +33,7 @@ public class SysUserController {
      */
     @Operation(summary = "分页查询用户列表")
     @GetMapping("/page")
-    // 暂时注释掉权限检查，用于测试
-    // @PreAuthorize("hasAuthority('system:user:list')")
+    @PreAuthorize("hasAuthority('system:user:list')")
     public Result<IPage<SysUser>> page(
             @Parameter(description = "页码", example = "1") @RequestParam(defaultValue = "1") Integer pageNum,
             @Parameter(description = "页大小", example = "10") @RequestParam(defaultValue = "10") Integer pageSize,
