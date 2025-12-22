@@ -41,6 +41,20 @@ public class ApiPermission extends BaseEntity {
     private String permissionScope;
 
     /**
+     * 删除标志（覆盖父类字段，标记为非数据库字段）
+     */
+    @TableField(exist = false)
+    @Schema(description = "删除标志（0代表存在 1代表删除）")
+    private Integer deleted;
+
+    /**
+     * 备注（覆盖父类字段，标记为非数据库字段）
+     */
+    @TableField(exist = false)
+    @Schema(description = "备注")
+    private String remark;
+
+    /**
      * API编码（非数据库字段，用于关联查询）
      */
     @TableField(exist = false)

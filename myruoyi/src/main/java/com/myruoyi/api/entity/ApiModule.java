@@ -56,6 +56,13 @@ public class ApiModule extends BaseEntity {
     private Integer deleted;
 
     /**
+     * 备注（覆盖父类字段，标记为非数据库字段）
+     */
+    @TableField(exist = false)
+    @Schema(description = "备注")
+    private String remark;
+
+    /**
      * 应用名称（非数据库字段，用于关联查询）
      */
     @TableField(exist = false)
