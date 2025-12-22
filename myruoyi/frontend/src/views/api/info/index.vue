@@ -161,7 +161,7 @@
     />
 
     <!-- 添加或修改API接口对话框 -->
-    <el-dialog :title="title" v-model="open" width="800px" append-to-body @close="handleDialogClose" ref="infoDialog">
+    <el-dialog :title="title" v-model="open" width="800px" append-to-body ref="infoDialog">
       <el-form ref="infoRef" :model="form" :rules="rules" label-width="100px">
         <el-row>
           <el-col :span="12">
@@ -453,23 +453,59 @@ function submitForm() {
     if (valid) {
       if (form.value.apiId != undefined) {
         updateInfo(form.value).then(response => {
-          proxy.$modal.msgSuccess("修改成功")
-          // 强制关闭对话框
-          forceCloseDialog()
-          getList()
+          // 无论响应码是什么，都先关闭对话框
+          open.value = false
+          
+          if (response.code === 200) {
+            proxy.$modal.msgSuccess("修改成功")
+            // 延迟刷新列表，确保对话框已关闭
+            setTimeout(() => {
+              getList()
+            }, 500)
+          } else {
+            proxy.$modal.msgError(response.msg || "修改失败")
+            // 即使修改失败，也刷新列表以显示最新状态
+            setTimeout(() => {
+              getList()
+            }, 500)
+          }
         }).catch(error => {
           console.error('更新API信息失败:', error)
+          // 即使出现异常，也关闭对话框
+          open.value = false
           proxy.$modal.msgError("更新失败：" + (error.message || "未知错误"))
+          // 刷新列表以显示最新状态
+          setTimeout(() => {
+            getList()
+          }, 500)
         })
       } else {
         addInfo(form.value).then(response => {
-          proxy.$modal.msgSuccess("新增成功")
-          // 强制关闭对话框
-          forceCloseDialog()
-          getList()
+          // 无论响应码是什么，都先关闭对话框
+          open.value = false
+          
+          if (response.code === 200) {
+            proxy.$modal.msgSuccess("新增成功")
+            // 延迟刷新列表，确保对话框已关闭
+            setTimeout(() => {
+              getList()
+            }, 500)
+          } else {
+            proxy.$modal.msgError(response.msg || "新增失败")
+            // 即使新增失败，也刷新列表以显示最新状态
+            setTimeout(() => {
+              getList()
+            }, 500)
+          }
         }).catch(error => {
           console.error('新增API信息失败:', error)
+          // 即使出现异常，也关闭对话框
+          open.value = false
           proxy.$modal.msgError("新增失败：" + (error.message || "未知错误"))
+          // 刷新列表以显示最新状态
+          setTimeout(() => {
+            getList()
+          }, 500)
         })
       }
     } else {

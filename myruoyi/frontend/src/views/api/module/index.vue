@@ -87,7 +87,7 @@
     </el-table>
 
     <!-- 添加或修改API模块对话框 -->
-    <el-dialog :title="title" v-model="open" width="500px" append-to-body @close="handleDialogClose" ref="moduleDialog">
+    <el-dialog :title="title" v-model="open" width="500px" append-to-body ref="moduleDialog">
       <el-form ref="moduleRef" :model="form" :rules="rules" label-width="80px">
         <el-form-item label="上级模块" prop="parentId">
           <el-tree-select
@@ -257,23 +257,59 @@ function submitForm() {
     if (valid) {
       if (form.value.moduleId != undefined) {
         updateModule(form.value).then(response => {
-          proxy.$modal.msgSuccess("修改成功")
-          // 强制关闭对话框
-          forceCloseDialog()
-          getList()
+          // 无论响应码是什么，都先关闭对话框
+          open.value = false
+          
+          if (response.code === 200) {
+            proxy.$modal.msgSuccess("修改成功")
+            // 延迟刷新列表，确保对话框已关闭
+            setTimeout(() => {
+              getList()
+            }, 500)
+          } else {
+            proxy.$modal.msgError(response.msg || "修改失败")
+            // 即使修改失败，也刷新列表以显示最新状态
+            setTimeout(() => {
+              getList()
+            }, 500)
+          }
         }).catch(error => {
           console.error('更新模块失败:', error)
+          // 即使出现异常，也关闭对话框
+          open.value = false
           proxy.$modal.msgError("更新失败：" + (error.message || "未知错误"))
+          // 刷新列表以显示最新状态
+          setTimeout(() => {
+            getList()
+          }, 500)
         })
       } else {
         addModule(form.value).then(response => {
-          proxy.$modal.msgSuccess("新增成功")
-          // 强制关闭对话框
-          forceCloseDialog()
-          getList()
+          // 无论响应码是什么，都先关闭对话框
+          open.value = false
+          
+          if (response.code === 200) {
+            proxy.$modal.msgSuccess("新增成功")
+            // 延迟刷新列表，确保对话框已关闭
+            setTimeout(() => {
+              getList()
+            }, 500)
+          } else {
+            proxy.$modal.msgError(response.msg || "新增失败")
+            // 即使新增失败，也刷新列表以显示最新状态
+            setTimeout(() => {
+              getList()
+            }, 500)
+          }
         }).catch(error => {
           console.error('新增模块失败:', error)
+          // 即使出现异常，也关闭对话框
+          open.value = false
           proxy.$modal.msgError("新增失败：" + (error.message || "未知错误"))
+          // 刷新列表以显示最新状态
+          setTimeout(() => {
+            getList()
+          }, 500)
         })
       }
     } else {
