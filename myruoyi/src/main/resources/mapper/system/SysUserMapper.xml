@@ -27,12 +27,12 @@
 
     <select id="selectUserByUserName" parameterType="String" resultMap="SysUserResult">
         <include refid="selectUserVo"/>
-        where u.user_name = #{userName} and u.deleted = '0'
+        where u.user_name = #{userName}
     </select>
 
     <select id="selectUserById" parameterType="Long" resultMap="SysUserResult">
         <include refid="selectUserVo"/>
-        where u.user_id = #{userId} and u.deleted = '0'
+        where u.user_id = #{userId}
     </select>
 
     <select id="selectPermissionsByUserId" parameterType="Long" resultType="String">
@@ -57,8 +57,8 @@
     <select id="selectDeptNameByUserId" parameterType="Long" resultType="String">
         select d.dept_name
         from sys_dept d
-        where d.dept_id = (select dept_id from sys_user where user_id = #{userId} and deleted = '0')
-          and d.deleted = '0'
+        where d.dept_id = (select dept_id from sys_user where user_id = #{userId})
+          and d.deleted = 0
         limit 1
     </select>
 
@@ -86,16 +86,17 @@
 
     <select id="selectPage" parameterType="com.baomidou.mybatisplus.extension.plugins.pagination.Page" resultMap="SysUserResult">
         <include refid="selectUserVo"/>
-        where u.deleted = '0'
-        <if test="userName != null and userName != ''">
-            and u.user_name like concat('%', #{userName}, '%')
-        </if>
-        <if test="phonenumber != null and phonenumber != ''">
-            and u.phonenumber like concat('%', #{phonenumber}, '%')
-        </if>
-        <if test="status != null and status != ''">
-            and u.status = #{status}
-        </if>
+        <where>
+            <if test="userName != null and userName != ''">
+                and u.user_name like concat('%', #{userName}, '%')
+            </if>
+            <if test="phonenumber != null and phonenumber != ''">
+                and u.phonenumber like concat('%', #{phonenumber}, '%')
+            </if>
+            <if test="status != null and status != ''">
+                and u.status = #{status}
+            </if>
+        </where>
         order by u.create_time desc
     </select>
 
