@@ -76,9 +76,11 @@ public class SysUserController {
     @Operation(summary = "修改用户")
     @PutMapping
     @PreAuthorize("hasAuthority('system:user:edit')")
-    public Result<Void> edit(@Validated @RequestBody SysUser user) {
+    public Result<SysUser> edit(@Validated @RequestBody SysUser user) {
         userService.updateUser(user);
-        return Result.success();
+        // 查询更新后的用户信息返回
+        SysUser updatedUser = userService.selectUserById(user.getUserId());
+        return Result.success(updatedUser);
     }
 
     /**

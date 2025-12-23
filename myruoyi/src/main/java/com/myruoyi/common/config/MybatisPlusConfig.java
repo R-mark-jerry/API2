@@ -55,4 +55,8 @@ public class MybatisPlusConfig {
         globalConfig.setDbConfig(dbConfig);
         return globalConfig;
     }
+
+    /**
+     * 自动填充处理器
+     */
 }

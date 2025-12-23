@@ -75,8 +75,9 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
         // 设置部门ID为null，因为deptId字段不映射到数据库
         user.setDeptId(null);
         
-        // 设置创建时间
-        user.setCreateTime(LocalDateTime.now());
+        // 不需要手动设置创建时间，MyMetaObjectHandler会自动填充
+        // 不需要手动设置创建者，MyMetaObjectHandler会自动填充
+        // 不需要手动设置删除标志，MyMetaObjectHandler会自动填充
         
         return baseMapper.insert(user);
     }
@@ -97,6 +98,9 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
         if (!checkEmailUnique(user)) {
             throw new BusinessException("修改用户'" + user.getUserName() + "'失败，邮箱账号已存在");
         }
+        
+        // 不需要手动设置更新时间，MyMetaObjectHandler会自动填充
+        // 不需要手动设置更新者，MyMetaObjectHandler会自动填充
         
         return baseMapper.updateById(user);
     }
@@ -177,11 +181,13 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
      */
     private boolean checkUserNameUnique(SysUser user) {
         Long userId = user.getUserId() == null ? -1L : user.getUserId();
-        SysUser info = baseMapper.selectUserByUserName(user.getUserName());
-        if (info != null && info.getUserId().longValue() != userId.longValue()) {
-            return false;
-        }
-        return true;
+        
+        // 使用LambdaQueryWrapper来查询，排除当前用户ID
+        LambdaQueryWrapper<SysUser> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(SysUser::getUserName, user.getUserName())
+               .ne(user.getUserId() != null, SysUser::getUserId, userId);
+        
+        return baseMapper.selectCount(wrapper) == 0;
     }
 
     /**
@@ -191,6 +197,10 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
      * @return true 唯一 false 不唯一
      */
     private boolean checkPhoneUnique(SysUser user) {
+        if (!StringUtils.hasText(user.getPhonenumber())) {
+            return true;
+        }
+        
         Long userId = user.getUserId() == null ? -1L : user.getUserId();
         LambdaQueryWrapper<SysUser> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(SysUser::getPhonenumber, user.getPhonenumber())
