@@ -49,19 +49,19 @@ public class ApiAppServiceImpl extends ServiceImpl<ApiAppMapper, ApiApp> impleme
         LambdaQueryWrapper<ApiApp> wrapper = new LambdaQueryWrapper<>();
         wrapper.like(StringUtils.hasText(apiApp.getAppCode()), ApiApp::getAppCode, apiApp.getAppCode())
                .like(StringUtils.hasText(apiApp.getAppName()), ApiApp::getAppName, apiApp.getAppName())
-               .like(StringUtils.hasText(apiApp.getOwnerName()), ApiApp::getOwnerName, apiApp.getOwnerName())
+               .like(StringUtils.hasText(apiApp.getResponsibleUserName()), ApiApp::getResponsibleUserName, apiApp.getResponsibleUserName())
                .eq(StringUtils.hasText(apiApp.getStatus()), ApiApp::getStatus, apiApp.getStatus())
                .orderByDesc(ApiApp::getCreateTime);
         return list(wrapper);
     }
 
     @Override
-    public IPage<ApiApp> selectApiAppPage(Integer pageNum, Integer pageSize, String appCode, String appName, String ownerName, String status) {
+    public IPage<ApiApp> selectApiAppPage(Integer pageNum, Integer pageSize, String appCode, String appName, String responsibleUserName, String status) {
         Page<ApiApp> page = new Page<>(pageNum, pageSize);
         LambdaQueryWrapper<ApiApp> wrapper = new LambdaQueryWrapper<>();
         wrapper.like(StringUtils.hasText(appCode), ApiApp::getAppCode, appCode)
                .like(StringUtils.hasText(appName), ApiApp::getAppName, appName)
-               .like(StringUtils.hasText(ownerName), ApiApp::getOwnerName, ownerName)
+               .like(StringUtils.hasText(responsibleUserName), ApiApp::getResponsibleUserName, responsibleUserName)
                .eq(StringUtils.hasText(status), ApiApp::getStatus, status)
                .orderByDesc(ApiApp::getCreateTime);
         return page(page, wrapper);
@@ -157,13 +157,13 @@ public class ApiAppServiceImpl extends ServiceImpl<ApiAppMapper, ApiApp> impleme
             SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
             for (ApiApp app : list) {
                 sb.append(app.getAppId()).append(",")
-                  .append(app.getAppCode()).append(",")
-                  .append(app.getAppName()).append(",")
-                  .append(app.getAppDesc() != null ? app.getAppDesc() : "").append(",")
-                  .append(app.getAppVersion()).append(",")
-                  .append(app.getOwnerName()).append(",")
-                  .append("0".equals(app.getStatus()) ? "正常" : "停用").append(",")
-                  .append(app.getCreateTime() != null ? sdf.format(app.getCreateTime()) : "").append("\n");
+                      .append(app.getAppCode()).append(",")
+                      .append(app.getAppName()).append(",")
+                      .append(app.getAppDesc() != null ? app.getAppDesc() : "").append(",")
+                      .append(app.getAppVersion()).append(",")
+                      .append(app.getResponsibleUserName() != null ? app.getResponsibleUserName() : "").append(",")
+                      .append("0".equals(app.getStatus()) ? "正常" : "停用").append(",")
+                      .append(app.getCreateTime() != null ? sdf.format(app.getCreateTime()) : "").append("\n");
             }
             
             // 写入响应
@@ -202,10 +202,10 @@ public class ApiAppServiceImpl extends ServiceImpl<ApiAppMapper, ApiApp> impleme
                         apiApp.setAppVersion(fields[3].trim());
                         
                         // 处理负责人信息
-                        String ownerName = fields[4].trim();
-                        if (StringUtils.hasText(ownerName)) {
+                        String responsibleUserName = fields[4].trim();
+                        if (StringUtils.hasText(responsibleUserName)) {
                             // 这里可以根据负责人姓名查找用户ID
-                            apiApp.setOwnerName(ownerName);
+                            apiApp.setResponsibleUserName(responsibleUserName);
                         }
                         
                         // 处理状态

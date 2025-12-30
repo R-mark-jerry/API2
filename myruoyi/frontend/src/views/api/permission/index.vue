@@ -59,7 +59,7 @@
           plain
           icon="Delete"
           :disabled="multiple"
-          @click="handleDelete"
+          @click="batchDelete"
         >删除</el-button>
       </el-col>
     </el-row>
@@ -101,7 +101,7 @@
           <el-button
             type="text"
             icon="Delete"
-            @click="handleDelete(scope.row)"
+            @click="directDelete(scope.row)"
             v-hasPermi="['api:permission:remove']"
           >删除</el-button>
         </template>
@@ -386,16 +386,98 @@ function submitForm() {
 
 /** 删除按钮操作 */
 function handleDelete(row) {
-  const _permissionIds = row.permissionId || ids.value
-  proxy.$modal.confirm('是否确认删除API权限编号为"' + _permissionIds + '"的数据项？').then(function() {
+  console.log('handleDelete called with row:', row)
+  console.log('ids.value:', ids.value)
+  
+  const permissionIds = row.permissionId ? [row.permissionId] : ids.value
+  console.log('permissionIds to delete:', permissionIds)
+  
+  if (permissionIds.length === 0) {
+    proxy.$modal.msgWarning("请选择要删除的数据")
+    return
+  }
+  
+  const permissionIdsStr = Array.isArray(permissionIds) ? permissionIds.join(',') : permissionIds
+  console.log('permissionIdsStr:', permissionIdsStr)
+  
+  proxy.$modal.confirm('是否确认删除API权限编号为"' + permissionIdsStr + '"的数据项？').then(() => {
+    console.log('User confirmed deletion')
     loading.value = true
-    return delPermission(_permissionIds).then(() => {
+    return delPermission(permissionIds)
+  }).then((response) => {
+    console.log('Delete response:', response)
+    proxy.$modal.msgSuccess("删除成功")
+    getList()
+  }).catch((error) => {
+    console.error('Delete error:', error)
+    proxy.$modal.msgError("删除失败：" + (error.message || "未知错误"))
+  }).finally(() => {
+    loading.value = false
+  })
+}
+
+// 直接删除函数 - 简化版删除功能
+function directDelete(row) {
+  console.log('directDelete called with row:', row)
+  
+  // 直接使用权限ID
+  const permissionId = row.permissionId
+  console.log('permissionId to delete:', permissionId)
+  
+  if (!permissionId) {
+    proxy.$modal.msgError("无效的权限ID")
+    return
+  }
+  
+  // 使用更简单的确认方式
+  if (confirm('确定要删除API权限"' + row.permissionName + '"吗？')) {
+    console.log('User confirmed deletion')
+    loading.value = true
+    
+    // 直接传递权限ID，而不是数组
+    delPermission(permissionId).then((response) => {
+      console.log('Delete response:', response)
       proxy.$modal.msgSuccess("删除成功")
       getList()
+    }).catch((error) => {
+      console.error('Delete error:', error)
+      proxy.$modal.msgError("删除失败：" + (error.message || "未知错误"))
     }).finally(() => {
       loading.value = false
     })
-  }).catch(() => {})
+  }
+}
+
+// 批量删除函数
+function batchDelete() {
+  console.log('batchDelete called')
+  console.log('ids.value:', ids.value)
+  
+  if (ids.value.length === 0) {
+    proxy.$modal.msgWarning("请选择要删除的数据")
+    return
+  }
+  
+  const permissionIdsStr = ids.value.join(',')
+  console.log('permissionIdsStr:', permissionIdsStr)
+  
+  // 使用更简单的确认方式
+  if (confirm('确定要删除选中的' + ids.value.length + '个API权限吗？')) {
+    console.log('User confirmed batch deletion')
+    loading.value = true
+    
+    // 传递ID数组
+    delPermission(ids.value).then((response) => {
+      console.log('Batch delete response:', response)
+      proxy.$modal.msgSuccess("删除成功")
+      getList()
+    }).catch((error) => {
+      console.error('Batch delete error:', error)
+      proxy.$modal.msgError("删除失败：" + (error.message || "未知错误"))
+    }).finally(() => {
+      loading.value = false
+    })
+  }
 }
 
 /** 状态修改 */

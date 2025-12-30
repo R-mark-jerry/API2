@@ -44,10 +44,10 @@ public class ApiAppController {
             @Parameter(description = "页大小", example = "10") @RequestParam(defaultValue = "10") Integer pageSize,
             @Parameter(description = "应用编码") @RequestParam(required = false) String appCode,
             @Parameter(description = "应用名称") @RequestParam(required = false) String appName,
-            @Parameter(description = "负责人姓名") @RequestParam(required = false) String ownerName,
+            @Parameter(description = "负责人姓名") @RequestParam(required = false) String responsibleUserName,
             @Parameter(description = "状态") @RequestParam(required = false) String status) {
         
-        return Result.success(apiAppService.selectApiAppPage(pageNum, pageSize, appCode, appName, ownerName, status));
+        return Result.success(apiAppService.selectApiAppPage(pageNum, pageSize, appCode, appName, responsibleUserName, status));
     }
 
     /**
@@ -81,16 +81,16 @@ public class ApiAppController {
     // @PreAuthorize("hasAuthority('api:app:add')")
     public Result<ApiApp> add(@Validated @RequestBody ApiApp apiApp) {
         // 如果没有指定负责人，则设置为当前用户
-        if (apiApp.getOwnerId() == null) {
+        if (apiApp.getResponsibleUserId() == null) {
             var currentUser = sysUserService.getCurrentUser();
             if (currentUser != null) {
-                apiApp.setOwnerId(currentUser.getUserId());
-                apiApp.setOwnerName(currentUser.getUserName());
+                apiApp.setResponsibleUserId(currentUser.getUserId());
+                apiApp.setResponsibleUserName(currentUser.getUserName());
             }
         } else {
             // 设置负责人信息
-            String ownerName = sysUserService.selectUserNameById(apiApp.getOwnerId());
-            apiApp.setOwnerName(ownerName);
+            String responsibleUserName = sysUserService.selectUserNameById(apiApp.getResponsibleUserId());
+            apiApp.setResponsibleUserName(responsibleUserName);
         }
         
         apiAppService.insertApiApp(apiApp);
@@ -112,9 +112,9 @@ public class ApiAppController {
         }
         
         // 设置负责人信息
-        if (apiApp.getOwnerId() != null) {
-            String ownerName = sysUserService.selectUserNameById(apiApp.getOwnerId());
-            apiApp.setOwnerName(ownerName);
+        if (apiApp.getResponsibleUserId() != null) {
+            String responsibleUserName = sysUserService.selectUserNameById(apiApp.getResponsibleUserId());
+            apiApp.setResponsibleUserName(responsibleUserName);
         }
         
         apiAppService.updateApiApp(apiApp);
@@ -215,15 +215,15 @@ public class ApiAppController {
         // 检查是否是应用负责人
         if (apiApp.getAppId() != null) {
             ApiApp existingApp = apiAppService.selectApiAppByAppId(apiApp.getAppId());
-            if (existingApp != null && existingApp.getOwnerId() != null &&
-                existingApp.getOwnerId().equals(currentUser.getUserId())) {
+            if (existingApp != null && existingApp.getResponsibleUserId() != null &&
+                existingApp.getResponsibleUserId().equals(currentUser.getUserId())) {
                 return true;
             }
         }
         
         // 检查是否是新应用且当前用户被指定为负责人
-        if (apiApp.getAppId() == null && apiApp.getOwnerId() != null &&
-            apiApp.getOwnerId().equals(currentUser.getUserId())) {
+        if (apiApp.getAppId() == null && apiApp.getResponsibleUserId() != null &&
+            apiApp.getResponsibleUserId().equals(currentUser.getUserId())) {
             return true;
         }
         

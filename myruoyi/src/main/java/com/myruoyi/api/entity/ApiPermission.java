@@ -46,6 +46,14 @@ public class ApiPermission extends BaseEntity {
     @TableField(exist = false)
     @Schema(description = "删除标志（0代表存在 1代表删除）")
     private Integer deleted;
+    
+    @TableField("responsible_user_id")
+    @Schema(description = "负责人ID")
+    private Long responsibleUserId;
+
+    @TableField("responsible_user_name")
+    @Schema(description = "负责人姓名")
+    private String responsibleUserName;
 
     /**
      * 备注（覆盖父类字段，标记为非数据库字段）
@@ -53,6 +61,23 @@ public class ApiPermission extends BaseEntity {
     @TableField(exist = false)
     @Schema(description = "备注")
     private String remark;
+    
+    // 为了确保编译正确，手动添加getter和setter方法
+    public Long getResponsibleUserId() {
+        return responsibleUserId;
+    }
+    
+    public void setResponsibleUserId(Long responsibleUserId) {
+        this.responsibleUserId = responsibleUserId;
+    }
+    
+    public String getResponsibleUserName() {
+        return responsibleUserName;
+    }
+    
+    public void setResponsibleUserName(String responsibleUserName) {
+        this.responsibleUserName = responsibleUserName;
+    }
 
     /**
      * API编码（非数据库字段，用于关联查询）

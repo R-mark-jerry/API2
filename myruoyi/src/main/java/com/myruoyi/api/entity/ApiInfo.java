@@ -87,6 +87,31 @@ public class ApiInfo extends BaseEntity {
     @TableField("owner_name")
     @Schema(description = "负责人姓名")
     private String ownerName;
+    
+    @TableField("responsible_user_id")
+    @Schema(description = "负责人ID")
+    private Long responsibleUserId;
+
+    @TableField("responsible_user_name")
+    @Schema(description = "负责人姓名")
+    private String responsibleUserName;
+    
+    // 为了确保编译正确，手动添加getter和setter方法
+    public Long getResponsibleUserId() {
+        return responsibleUserId;
+    }
+    
+    public void setResponsibleUserId(Long responsibleUserId) {
+        this.responsibleUserId = responsibleUserId;
+    }
+    
+    public String getResponsibleUserName() {
+        return responsibleUserName;
+    }
+    
+    public void setResponsibleUserName(String responsibleUserName) {
+        this.responsibleUserName = responsibleUserName;
+    }
 
     @TableField("deleted")
     @TableLogic

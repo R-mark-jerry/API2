@@ -38,11 +38,11 @@ public interface ApiAppService extends IService<ApiApp> {
      * @param pageSize 页大小
      * @param appCode 应用编码
      * @param appName 应用名称
-     * @param ownerName 负责人姓名
+     * @param responsibleUserName 负责人姓名
      * @param status 状态
      * @return 分页结果
      */
-    IPage<ApiApp> selectApiAppPage(Integer pageNum, Integer pageSize, String appCode, String appName, String ownerName, String status);
+    IPage<ApiApp> selectApiAppPage(Integer pageNum, Integer pageSize, String appCode, String appName, String responsibleUserName, String status);
 
     /**
      * 新增API应用

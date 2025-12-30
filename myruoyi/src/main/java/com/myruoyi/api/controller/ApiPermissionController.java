@@ -3,6 +3,7 @@ package com.myruoyi.api.controller;
 import com.myruoyi.api.entity.ApiPermission;
 import com.myruoyi.api.service.ApiPermissionService;
 import com.myruoyi.common.core.result.Result;
+import com.myruoyi.system.service.SysUserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -26,6 +27,7 @@ import java.util.List;
 public class ApiPermissionController {
 
     private final ApiPermissionService apiPermissionService;
+    private final SysUserService sysUserService;
 
     /**
      * 分页查询API权限列表
@@ -113,6 +115,11 @@ public class ApiPermissionController {
     @PutMapping
     @PreAuthorize("hasAuthority('api:permission:edit')")
     public Result<ApiPermission> edit(@Validated @RequestBody ApiPermission apiPermission) {
+        // 检查权限权限
+        if (!checkPermissionPermission(apiPermission, "edit")) {
+            return Result.error("您没有权限在该权限下进行操作");
+        }
+        
         apiPermissionService.updateApiPermission(apiPermission);
         // 查询更新后的权限信息返回
         ApiPermission updatedPermission = apiPermissionService.selectApiPermissionByPermissionId(apiPermission.getPermissionId());
@@ -126,6 +133,11 @@ public class ApiPermissionController {
     @PostMapping
     @PreAuthorize("hasAuthority('api:permission:add')")
     public Result<Void> add(@Validated @RequestBody ApiPermission apiPermission) {
+        // 检查权限权限
+        if (!checkPermissionPermission(apiPermission, "add")) {
+            return Result.error("您没有权限在该权限下进行操作");
+        }
+        
         apiPermissionService.insertApiPermission(apiPermission);
         return Result.success();
     }
@@ -151,6 +163,13 @@ public class ApiPermissionController {
     @DeleteMapping("/{permissionId}")
     @PreAuthorize("hasAuthority('api:permission:remove')")
     public Result<Void> remove(@PathVariable Long permissionId) {
+        // 检查权限权限
+        ApiPermission apiPermission = new ApiPermission();
+        apiPermission.setPermissionId(permissionId);
+        if (!checkPermissionPermission(apiPermission, "delete")) {
+            return Result.error("您没有权限删除权限ID为" + permissionId + "的权限");
+        }
+        
         apiPermissionService.deleteApiPermissionByPermissionId(permissionId);
         return Result.success();
     }
@@ -162,8 +181,17 @@ public class ApiPermissionController {
     @DeleteMapping("/batch")
     @PreAuthorize("hasAuthority('api:permission:remove')")
     public Result<Integer> batchRemove(@RequestParam Long apiId,
-                                   @RequestParam String permissionType,
-                                   @RequestParam List<Long> permissionTargets) {
+                                      @RequestParam String permissionType,
+                                      @RequestParam List<Long> permissionTargets) {
+        // 检查权限权限
+        for (Long permissionId : permissionTargets) {
+            ApiPermission apiPermission = new ApiPermission();
+            apiPermission.setPermissionId(permissionId);
+            if (!checkPermissionPermission(apiPermission, "delete")) {
+                return Result.error("您没有权限删除权限ID为" + permissionId + "的权限");
+            }
+        }
+        
         int count = apiPermissionService.deleteBatchPermission(apiId, permissionType, permissionTargets);
         return Result.success(count);
     }
@@ -179,5 +207,54 @@ public class ApiPermissionController {
                                       @RequestParam String permissionScope) {
         boolean hasPermission = apiPermissionService.checkUserPermission(apiId, userId, permissionScope);
         return Result.success(hasPermission);
+    }
+
+    /**
+     * 检查权限权限
+     *
+     * @param apiPermission 权限信息
+     * @param operation 操作类型
+     * @return 是否有权限
+     */
+    private boolean checkPermissionPermission(ApiPermission apiPermission, String operation) {
+        // 获取当前用户
+        var currentUser = sysUserService.getCurrentUser();
+        if (currentUser == null) {
+            return false;
+        }
+        
+        // 超级管理员拥有所有权限
+        if (isAdmin(currentUser)) {
+            return true;
+        }
+        
+        // 检查是否是权限负责人
+        if (apiPermission.getPermissionId() != null) {
+            ApiPermission existingPermission = apiPermissionService.selectApiPermissionByPermissionId(apiPermission.getPermissionId());
+            if (existingPermission != null && existingPermission.getResponsibleUserId() != null &&
+                existingPermission.getResponsibleUserId().equals(currentUser.getUserId())) {
+                return true;
+            }
+        }
+        
+        // 检查是否是新权限且当前用户被指定为负责人
+        if (apiPermission.getPermissionId() == null && apiPermission.getResponsibleUserId() != null &&
+            apiPermission.getResponsibleUserId().equals(currentUser.getUserId())) {
+            return true;
+        }
+        
+        return false;
+    }
+
+    /**
+     * 判断是否是管理员
+     *
+     * @param user 用户信息
+     * @return 结果
+     */
+    private boolean isAdmin(com.myruoyi.system.entity.SysUser user) {
+        // 这里可以根据实际业务逻辑判断，比如检查用户角色
+        // 简化处理，假设用户ID为1的是管理员
+        return user.getUserId() != null && user.getUserId() == 1L;
     }
 }

@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.myruoyi.api.entity.ApiInfo;
 import com.myruoyi.api.service.ApiInfoService;
 import com.myruoyi.common.core.result.Result;
+import com.myruoyi.system.service.SysUserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -28,6 +29,7 @@ import java.util.List;
 public class ApiInfoController {
 
     private final ApiInfoService apiInfoService;
+    private final SysUserService sysUserService;
 
     /**
      * 分页查询API接口列表
@@ -111,6 +113,19 @@ public class ApiInfoController {
     @PostMapping
     @PreAuthorize("hasAuthority('api:info:add')")
     public Result<Void> add(@Validated @RequestBody ApiInfo apiInfo) {
+        // 如果没有指定负责人，则设置为当前用户
+        if (apiInfo.getResponsibleUserId() == null) {
+            var currentUser = sysUserService.getCurrentUser();
+            if (currentUser != null) {
+                apiInfo.setResponsibleUserId(currentUser.getUserId());
+                apiInfo.setResponsibleUserName(currentUser.getUserName());
+            }
+        } else {
+            // 设置负责人信息
+            String responsibleUserName = sysUserService.selectUserNameById(apiInfo.getResponsibleUserId());
+            apiInfo.setResponsibleUserName(responsibleUserName);
+        }
+        
         apiInfoService.insertApiInfo(apiInfo);
         return Result.success();
     }
@@ -122,6 +137,17 @@ public class ApiInfoController {
     @PutMapping
     @PreAuthorize("hasAuthority('api:info:edit')")
     public Result<ApiInfo> edit(@Validated @RequestBody ApiInfo apiInfo) {
+        // 检查API权限
+        if (!checkApiPermission(apiInfo, "edit")) {
+            return Result.error("您没有权限在该API下进行操作");
+        }
+        
+        // 设置负责人信息
+        if (apiInfo.getResponsibleUserId() != null) {
+            String responsibleUserName = sysUserService.selectUserNameById(apiInfo.getResponsibleUserId());
+            apiInfo.setResponsibleUserName(responsibleUserName);
+        }
+        
         apiInfoService.updateApiInfo(apiInfo);
         // 查询更新后的API信息返回
         ApiInfo updatedApiInfo = apiInfoService.selectApiInfoByApiId(apiInfo.getApiId());
@@ -135,8 +161,66 @@ public class ApiInfoController {
     @DeleteMapping("/{apiIds}")
     @PreAuthorize("hasAuthority('api:info:remove')")
     public Result<Void> remove(@PathVariable Long[] apiIds) {
+        // 检查API权限
+        for (Long apiId : apiIds) {
+            ApiInfo apiInfo = new ApiInfo();
+            apiInfo.setApiId(apiId);
+            if (!checkApiPermission(apiInfo, "delete")) {
+                return Result.error("您没有权限删除API ID为" + apiId + "的接口");
+            }
+        }
+        
         apiInfoService.deleteApiInfoByApiIds(apiIds);
         return Result.success();
+    }
+
+    /**
+     * 检查API权限
+     *
+     * @param apiInfo API信息
+     * @param operation 操作类型
+     * @return 是否有权限
+     */
+    private boolean checkApiPermission(ApiInfo apiInfo, String operation) {
+        // 获取当前用户
+        var currentUser = sysUserService.getCurrentUser();
+        if (currentUser == null) {
+            return false;
+        }
+        
+        // 超级管理员拥有所有权限
+        if (isAdmin(currentUser)) {
+            return true;
+        }
+        
+        // 检查是否是API负责人
+        if (apiInfo.getApiId() != null) {
+            ApiInfo existingApi = apiInfoService.selectApiInfoByApiId(apiInfo.getApiId());
+            if (existingApi != null && existingApi.getResponsibleUserId() != null &&
+                existingApi.getResponsibleUserId().equals(currentUser.getUserId())) {
+                return true;
+            }
+        }
+        
+        // 检查是否是新API且当前用户被指定为负责人
+        if (apiInfo.getApiId() == null && apiInfo.getResponsibleUserId() != null &&
+            apiInfo.getResponsibleUserId().equals(currentUser.getUserId())) {
+            return true;
+        }
+        
+        return false;
+    }
+
+    /**
+     * 判断是否是管理员
+     *
+     * @param user 用户信息
+     * @return 结果
+     */
+    private boolean isAdmin(com.myruoyi.system.entity.SysUser user) {
+        // 这里可以根据实际业务逻辑判断，比如检查用户角色
+        // 简化处理，假设用户ID为1的是管理员
+        return user.getUserId() != null && user.getUserId() == 1L;
     }
 
     /**

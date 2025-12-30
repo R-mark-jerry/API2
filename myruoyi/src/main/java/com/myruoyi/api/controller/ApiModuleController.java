@@ -3,6 +3,7 @@ package com.myruoyi.api.controller;
 import com.myruoyi.api.entity.ApiModule;
 import com.myruoyi.api.service.ApiModuleService;
 import com.myruoyi.common.core.result.Result;
+import com.myruoyi.system.service.SysUserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -26,6 +27,7 @@ import java.util.List;
 public class ApiModuleController {
 
     private final ApiModuleService apiModuleService;
+    private final SysUserService sysUserService;
 
     /**
      * 查询API模块列表
@@ -81,6 +83,19 @@ public class ApiModuleController {
     @PostMapping
     @PreAuthorize("hasAuthority('api:module:add')")
     public Result<ApiModule> add(@Validated @RequestBody ApiModule apiModule) {
+        // 如果没有指定负责人，则设置为当前用户
+        if (apiModule.getResponsibleUserId() == null) {
+            var currentUser = sysUserService.getCurrentUser();
+            if (currentUser != null) {
+                apiModule.setResponsibleUserId(currentUser.getUserId());
+                apiModule.setResponsibleUserName(currentUser.getUserName());
+            }
+        } else {
+            // 设置负责人信息
+            String responsibleUserName = sysUserService.selectUserNameById(apiModule.getResponsibleUserId());
+            apiModule.setResponsibleUserName(responsibleUserName);
+        }
+        
         ApiModule savedModule = apiModuleService.insertApiModule(apiModule);
         return Result.success(savedModule);
     }
@@ -92,6 +107,17 @@ public class ApiModuleController {
     @PutMapping
     @PreAuthorize("hasAuthority('api:module:edit')")
     public Result<ApiModule> edit(@Validated @RequestBody ApiModule apiModule) {
+        // 检查模块权限
+        if (!checkModulePermission(apiModule, "edit")) {
+            return Result.error("您没有权限在该模块下进行操作");
+        }
+        
+        // 设置负责人信息
+        if (apiModule.getResponsibleUserId() != null) {
+            String responsibleUserName = sysUserService.selectUserNameById(apiModule.getResponsibleUserId());
+            apiModule.setResponsibleUserName(responsibleUserName);
+        }
+        
         apiModuleService.updateApiModule(apiModule);
         // 查询更新后的模块信息返回
         ApiModule updatedModule = apiModuleService.selectApiModuleByModuleId(apiModule.getModuleId());
@@ -105,6 +131,15 @@ public class ApiModuleController {
     @DeleteMapping("/{moduleIds}")
     @PreAuthorize("hasAuthority('api:module:remove')")
     public Result<Void> remove(@PathVariable Long[] moduleIds) {
+        // 检查模块权限
+        for (Long moduleId : moduleIds) {
+            ApiModule apiModule = new ApiModule();
+            apiModule.setModuleId(moduleId);
+            if (!checkModulePermission(apiModule, "delete")) {
+                return Result.error("您没有权限删除模块ID为" + moduleId + "的模块");
+            }
+        }
+        
         apiModuleService.deleteApiModuleByModuleIds(moduleIds);
         return Result.success();
     }
@@ -118,5 +153,54 @@ public class ApiModuleController {
     public Result<Integer> getChildCount(@PathVariable Long parentId) {
         int count = apiModuleService.selectChildModuleCount(parentId);
         return Result.success(count);
+    }
+
+    /**
+     * 检查模块权限
+     *
+     * @param apiModule 模块信息
+     * @param operation 操作类型
+     * @return 是否有权限
+     */
+    private boolean checkModulePermission(ApiModule apiModule, String operation) {
+        // 获取当前用户
+        var currentUser = sysUserService.getCurrentUser();
+        if (currentUser == null) {
+            return false;
+        }
+        
+        // 超级管理员拥有所有权限
+        if (isAdmin(currentUser)) {
+            return true;
+        }
+        
+        // 检查是否是模块负责人
+        if (apiModule.getModuleId() != null) {
+            ApiModule existingModule = apiModuleService.selectApiModuleByModuleId(apiModule.getModuleId());
+            if (existingModule != null && existingModule.getResponsibleUserId() != null &&
+                existingModule.getResponsibleUserId().equals(currentUser.getUserId())) {
+                return true;
+            }
+        }
+        
+        // 检查是否是新模块且当前用户被指定为负责人
+        if (apiModule.getModuleId() == null && apiModule.getResponsibleUserId() != null &&
+            apiModule.getResponsibleUserId().equals(currentUser.getUserId())) {
+            return true;
+        }
+        
+        return false;
+    }
+
+    /**
+     * 判断是否是管理员
+     *
+     * @param user 用户信息
+     * @return 结果
+     */
+    private boolean isAdmin(com.myruoyi.system.entity.SysUser user) {
+        // 这里可以根据实际业务逻辑判断，比如检查用户角色
+        // 简化处理，假设用户ID为1的是管理员
+        return user.getUserId() != null && user.getUserId() == 1L;
     }
 }

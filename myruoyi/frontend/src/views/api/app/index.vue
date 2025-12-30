@@ -52,7 +52,7 @@
           plain
           icon="Delete"
           :disabled="multiple"
-          @click="handleDelete"
+          @click="batchDelete"
         >删除</el-button>
       </el-col>
       <el-col :span="1.5">
@@ -114,7 +114,7 @@
       <el-table-column label="应用名称" align="center" prop="appName" :show-overflow-tooltip="true" />
       <el-table-column label="应用描述" align="center" prop="appDesc" :show-overflow-tooltip="true" />
       <el-table-column label="应用版本" align="center" prop="appVersion" />
-      <el-table-column label="负责人" align="center" prop="ownerName" />
+      <el-table-column label="负责人" align="center" prop="responsibleUserName" />
       <el-table-column label="状态" align="center" prop="status">
         <template #default="scope">
           <el-switch
@@ -141,7 +141,7 @@
           <el-button
             type="text"
             icon="Delete"
-            @click="handleDelete(scope.row)"
+            @click="directDelete(scope.row)"
             v-hasPermi="['api:app:remove']"
           >删除</el-button>
         </template>
@@ -176,9 +176,9 @@
         <el-form-item label="应用版本" prop="appVersion">
           <el-input v-model="form.appVersion" placeholder="请输入应用版本" />
         </el-form-item>
-        <el-form-item label="负责人" prop="ownerId">
+        <el-form-item label="负责人" prop="responsibleUserId">
           <el-select
-            v-model="form.ownerId"
+            v-model="form.responsibleUserId"
             placeholder="请选择负责人"
             clearable
             filterable
@@ -189,7 +189,7 @@
             <el-option
               v-for="user in userOptions"
               :key="user.userId"
-              :label="user.nickName + '(' + user.userName + ')'"
+              :label="user.userName"
               :value="user.userId"
             />
           </el-select>
@@ -304,6 +304,7 @@ function reset() {
     appDesc: undefined,
     appVersion: undefined,
     ownerId: undefined,
+    responsibleUserId: undefined,
     status: "0"
   }
   // 注释掉这行，因为它可能会干扰对话框的显示
@@ -441,17 +442,98 @@ function submitForm() {
 
 /** 删除按钮操作 */
 function handleDelete(row) {
-  const _appIds = row.appId || ids.value
-  const appNames = row.appName || appList.value.filter(item => _appIds.includes(item.appId)).map(item => item.appName).join(', ')
-  proxy.$modal.confirm('是否确认删除应用"' + appNames + '"？删除后不可恢复！').then(function() {
+  console.log('handleDelete called with row:', row)
+  console.log('ids.value:', ids.value)
+  
+  const appIds = row.appId ? [row.appId] : ids.value
+  console.log('appIds to delete:', appIds)
+  
+  if (appIds.length === 0) {
+    proxy.$modal.msgWarning("请选择要删除的数据")
+    return
+  }
+  
+  const appIdsStr = Array.isArray(appIds) ? appIds.join(',') : appIds
+  console.log('appIdsStr:', appIdsStr)
+  
+  proxy.$modal.confirm('是否确认删除应用编号为"' + appIdsStr + '"的数据项？').then(() => {
+    console.log('User confirmed deletion')
     loading.value = true
-    return delApp(_appIds).then(() => {
+    return delApp(appIds)
+  }).then((response) => {
+    console.log('Delete response:', response)
+    proxy.$modal.msgSuccess("删除成功")
+    getList()
+  }).catch((error) => {
+    console.error('Delete error:', error)
+    proxy.$modal.msgError("删除失败：" + (error.message || "未知错误"))
+  }).finally(() => {
+    loading.value = false
+  })
+}
+
+// 直接删除函数 - 简化版删除功能
+function directDelete(row) {
+  console.log('directDelete called with row:', row)
+  
+  // 直接使用应用ID
+  const appId = row.appId
+  console.log('appId to delete:', appId)
+  
+  if (!appId) {
+    proxy.$modal.msgError("无效的应用ID")
+    return
+  }
+  
+  // 使用更简单的确认方式
+  if (confirm('确定要删除应用"' + row.appName + '"吗？')) {
+    console.log('User confirmed deletion')
+    loading.value = true
+    
+    // 直接传递应用ID，而不是数组
+    delApp(appId).then((response) => {
+      console.log('Delete response:', response)
       proxy.$modal.msgSuccess("删除成功")
       getList()
+    }).catch((error) => {
+      console.error('Delete error:', error)
+      proxy.$modal.msgError("删除失败：" + (error.message || "未知错误"))
     }).finally(() => {
       loading.value = false
     })
-  }).catch(() => {})
+  }
+}
+
+// 批量删除函数
+function batchDelete() {
+  console.log('batchDelete called')
+  console.log('ids.value:', ids.value)
+  
+  if (ids.value.length === 0) {
+    proxy.$modal.msgWarning("请选择要删除的数据")
+    return
+  }
+  
+  const appIdsStr = ids.value.join(',')
+  console.log('appIdsStr:', appIdsStr)
+  
+  // 使用更简单的确认方式
+  if (confirm('确定要删除选中的' + ids.value.length + '个应用吗？')) {
+    console.log('User confirmed batch deletion')
+    loading.value = true
+    
+    // 传递ID数组
+    delApp(ids.value).then((response) => {
+      console.log('Batch delete response:', response)
+      proxy.$modal.msgSuccess("删除成功")
+      getList()
+    }).catch((error) => {
+      console.error('Batch delete error:', error)
+      proxy.$modal.msgError("删除失败：" + (error.message || "未知错误"))
+    }).finally(() => {
+      loading.value = false
+    })
+  }
 }
 
 /** 状态修改 */

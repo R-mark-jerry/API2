@@ -95,7 +95,7 @@
           plain
           icon="Delete"
           :disabled="multiple"
-          @click="handleDelete"
+          @click="batchDelete"
         >删除</el-button>
       </el-col>
     </el-row>
@@ -145,7 +145,7 @@
           <el-button
             type="text"
             icon="Delete"
-            @click="handleDelete(scope.row)"
+            @click="directDelete(scope.row)"
             v-hasPermi="['api:info:remove']"
           >删除</el-button>
         </template>
@@ -260,6 +260,28 @@
             </el-form-item>
           </el-col>
         </el-row>
+        <el-row>
+          <el-col :span="12">
+            <el-form-item label="负责人" prop="responsibleUserId">
+              <el-select
+                v-model="form.responsibleUserId"
+                placeholder="请选择负责人"
+                clearable
+                filterable
+                remote
+                :remote-method="searchUsers"
+                :loading="userLoading"
+              >
+                <el-option
+                  v-for="user in userOptions"
+                  :key="user.userId"
+                  :label="user.userName"
+                  :value="user.userId"
+                />
+              </el-select>
+            </el-form-item>
+          </el-col>
+        </el-row>
       </el-form>
       <template #footer>
         <div class="dialog-footer">
@@ -276,6 +298,7 @@ import { ref, onMounted, reactive, toRefs, getCurrentInstance, nextTick } from '
 import { listInfo, getInfo, delInfo, addInfo, updateInfo } from '@/api/info'
 import { listApp } from '@/api/app'
 import { listModule } from '@/api/module'
+import { pageUser } from '@/api/system/user'
 import { parseTime } from '@/utils/ruoyi'
 
 const { proxy } = getCurrentInstance()
@@ -291,6 +314,8 @@ const single = ref(true)
 const multiple = ref(true)
 const total = ref(0)
 const title = ref("")
+const userOptions = ref([])
+const userLoading = ref(false)
 const apiStatusOptions = ref([
   { label: '开发中', value: '0' },
   { label: '测试中', value: '1' },
@@ -387,7 +412,8 @@ function reset() {
     requestExample: undefined,
     responseExample: undefined,
     apiStatus: "0",
-    publishStatus: "0"
+    publishStatus: "0",
+    responsibleUserId: undefined
   }
   // 注释掉这行，因为它可能会干扰对话框的显示
   // proxy.resetForm("infoRef")
@@ -519,16 +545,98 @@ function submitForm() {
 
 /** 删除按钮操作 */
 function handleDelete(row) {
-  const _apiIds = row.apiId || ids.value
-  proxy.$modal.confirm('是否确认删除API接口编号为"' + _apiIds + '"的数据项？').then(function() {
+  console.log('handleDelete called with row:', row)
+  console.log('ids.value:', ids.value)
+  
+  const apiIds = row.apiId ? [row.apiId] : ids.value
+  console.log('apiIds to delete:', apiIds)
+  
+  if (apiIds.length === 0) {
+    proxy.$modal.msgWarning("请选择要删除的数据")
+    return
+  }
+  
+  const apiIdsStr = Array.isArray(apiIds) ? apiIds.join(',') : apiIds
+  console.log('apiIdsStr:', apiIdsStr)
+  
+  proxy.$modal.confirm('是否确认删除API接口编号为"' + apiIdsStr + '"的数据项？').then(() => {
+    console.log('User confirmed deletion')
     loading.value = true
-    return delInfo(_apiIds).then(() => {
+    return delInfo(apiIds)
+  }).then((response) => {
+    console.log('Delete response:', response)
+    proxy.$modal.msgSuccess("删除成功")
+    getList()
+  }).catch((error) => {
+    console.error('Delete error:', error)
+    proxy.$modal.msgError("删除失败：" + (error.message || "未知错误"))
+  }).finally(() => {
+    loading.value = false
+  })
+}
+
+// 直接删除函数 - 简化版删除功能
+function directDelete(row) {
+  console.log('directDelete called with row:', row)
+  
+  // 直接使用API ID
+  const apiId = row.apiId
+  console.log('apiId to delete:', apiId)
+  
+  if (!apiId) {
+    proxy.$modal.msgError("无效的API ID")
+    return
+  }
+  
+  // 使用更简单的确认方式
+  if (confirm('确定要删除API接口"' + row.apiName + '"吗？')) {
+    console.log('User confirmed deletion')
+    loading.value = true
+    
+    // 直接传递API ID，而不是数组
+    delInfo(apiId).then((response) => {
+      console.log('Delete response:', response)
       proxy.$modal.msgSuccess("删除成功")
       getList()
+    }).catch((error) => {
+      console.error('Delete error:', error)
+      proxy.$modal.msgError("删除失败：" + (error.message || "未知错误"))
     }).finally(() => {
       loading.value = false
     })
-  }).catch(() => {})
+  }
+}
+
+// 批量删除函数
+function batchDelete() {
+  console.log('batchDelete called')
+  console.log('ids.value:', ids.value)
+  
+  if (ids.value.length === 0) {
+    proxy.$modal.msgWarning("请选择要删除的数据")
+    return
+  }
+  
+  const apiIdsStr = ids.value.join(',')
+  console.log('apiIdsStr:', apiIdsStr)
+  
+  // 使用更简单的确认方式
+  if (confirm('确定要删除选中的' + ids.value.length + '个API接口吗？')) {
+    console.log('User confirmed batch deletion')
+    loading.value = true
+    
+    // 传递ID数组
+    delInfo(ids.value).then((response) => {
+      console.log('Batch delete response:', response)
+      proxy.$modal.msgSuccess("删除成功")
+      getList()
+    }).catch((error) => {
+      console.error('Batch delete error:', error)
+      proxy.$modal.msgError("删除失败：" + (error.message || "未知错误"))
+    }).finally(() => {
+      loading.value = false
+    })
+  }
 }
 
 /** 获取请求方法类型 */
@@ -545,10 +653,28 @@ function getMethodType(method) {
   return 'info'
 }
 
+/** 搜索用户 */
+function searchUsers(query) {
+  if (query !== '') {
+    userLoading.value = true
+    // 使用分页接口而不是列表接口
+    pageUser({ pageNum: 1, pageSize: 20, userName: query }).then(response => {
+      userOptions.value = response.data.records || response.data || []
+      userLoading.value = false
+    })
+  } else {
+    userOptions.value = []
+  }
+}
+
 onMounted(() => {
   getList()
   getAppList()
   getModuleList()
+  // 初始化用户列表
+  pageUser({ pageNum: 1, pageSize: 20 }).then(response => {
+    userOptions.value = response.data.records || response.data || []
+  })
 })
 
 // 强制关闭对话框函数

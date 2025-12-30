@@ -44,6 +44,24 @@
       </el-col>
       <el-col :span="1.5">
         <el-button
+          type="success"
+          plain
+          icon="Edit"
+          :disabled="single"
+          @click="handleUpdate"
+        >修改</el-button>
+      </el-col>
+      <el-col :span="1.5">
+        <el-button
+          type="danger"
+          plain
+          icon="Delete"
+          :disabled="multiple"
+          @click="batchDelete"
+        >删除</el-button>
+      </el-col>
+      <el-col :span="1.5">
+        <el-button
           type="info"
           plain
           icon="Sort"
@@ -58,7 +76,9 @@
       row-key="moduleId"
       :default-expand-all="isExpandAll"
       :tree-props="{children: 'children', hasChildren: 'hasChildren'}"
+      @selection-change="handleSelectionChange"
     >
+      <el-table-column type="selection" width="55" align="center" />
       <el-table-column prop="moduleCode" label="模块编码" :show-overflow-tooltip="true" />
       <el-table-column prop="moduleName" label="模块名称" :show-overflow-tooltip="true" />
       <el-table-column prop="orderNum" label="排序" width="100" />
@@ -79,7 +99,7 @@
           <el-button
             type="text"
             icon="Delete"
-            @click="handleDelete(scope.row)"
+            @click="directDelete(scope.row)"
             v-hasPermi="['api:module:remove']"
           >删除</el-button>
         </template>
@@ -108,6 +128,24 @@
         <el-form-item label="显示排序" prop="orderNum">
           <el-input-number v-model="form.orderNum" controls-position="right" :min="0" />
         </el-form-item>
+        <el-form-item label="负责人" prop="responsibleUserId">
+          <el-select
+            v-model="form.responsibleUserId"
+            placeholder="请选择负责人"
+            clearable
+            filterable
+            remote
+            :remote-method="searchUsers"
+            :loading="userLoading"
+          >
+            <el-option
+              v-for="user in userOptions"
+              :key="user.userId"
+              :label="user.userName"
+              :value="user.userId"
+            />
+          </el-select>
+        </el-form-item>
         <el-form-item label="模块描述" prop="moduleDesc">
           <el-input v-model="form.moduleDesc" type="textarea" placeholder="请输入模块描述" />
         </el-form-item>
@@ -126,6 +164,7 @@
 import { ref, onMounted, reactive, toRefs, getCurrentInstance, nextTick } from 'vue'
 import { listModule, getModule, delModule, addModule, updateModule, treeModule } from '@/api/module'
 import { listApp } from '@/api/app'
+import { pageUser } from '@/api/system/user'
 import { handleTree } from '@/utils/ruoyi'
 
 const { proxy } = getCurrentInstance()
@@ -138,6 +177,11 @@ const loading = ref(true)
 const showSearch = ref(true)
 const isExpandAll = ref(false)
 const title = ref("")
+const userOptions = ref([])
+const userLoading = ref(false)
+const ids = ref([])
+const single = ref(true)
+const multiple = ref(true)
 
 const data = reactive({
   form: {},
@@ -206,7 +250,8 @@ function reset() {
     moduleCode: undefined,
     moduleName: undefined,
     moduleDesc: undefined,
-    orderNum: 0
+    orderNum: 0,
+    responsibleUserId: undefined
   }
   // 注释掉这行，因为它可能会干扰对话框的显示
   // proxy.resetForm("moduleRef")
@@ -324,15 +369,98 @@ function submitForm() {
 
 /** 删除按钮操作 */
 function handleDelete(row) {
-  proxy.$modal.confirm('是否确认删除名称为"' + row.moduleName + '"的数据项？').then(function() {
+  console.log('handleDelete called with row:', row)
+  console.log('ids.value:', ids.value)
+  
+  const moduleIds = row.moduleId ? [row.moduleId] : ids.value
+  console.log('moduleIds to delete:', moduleIds)
+  
+  if (moduleIds.length === 0) {
+    proxy.$modal.msgWarning("请选择要删除的数据")
+    return
+  }
+  
+  const moduleIdsStr = Array.isArray(moduleIds) ? moduleIds.join(',') : moduleIds
+  console.log('moduleIdsStr:', moduleIdsStr)
+  
+  proxy.$modal.confirm('是否确认删除模块编号为"' + moduleIdsStr + '"的数据项？').then(() => {
+    console.log('User confirmed deletion')
     loading.value = true
-    return delModule(row.moduleId).then(() => {
+    return delModule(moduleIds)
+  }).then((response) => {
+    console.log('Delete response:', response)
+    proxy.$modal.msgSuccess("删除成功")
+    getList()
+  }).catch((error) => {
+    console.error('Delete error:', error)
+    proxy.$modal.msgError("删除失败：" + (error.message || "未知错误"))
+  }).finally(() => {
+    loading.value = false
+  })
+}
+
+// 直接删除函数 - 简化版删除功能
+function directDelete(row) {
+  console.log('directDelete called with row:', row)
+  
+  // 直接使用模块ID
+  const moduleId = row.moduleId
+  console.log('moduleId to delete:', moduleId)
+  
+  if (!moduleId) {
+    proxy.$modal.msgError("无效的模块ID")
+    return
+  }
+  
+  // 使用更简单的确认方式
+  if (confirm('确定要删除模块"' + row.moduleName + '"吗？')) {
+    console.log('User confirmed deletion')
+    loading.value = true
+    
+    // 直接传递模块ID，而不是数组
+    delModule(moduleId).then((response) => {
+      console.log('Delete response:', response)
       proxy.$modal.msgSuccess("删除成功")
       getList()
+    }).catch((error) => {
+      console.error('Delete error:', error)
+      proxy.$modal.msgError("删除失败：" + (error.message || "未知错误"))
     }).finally(() => {
       loading.value = false
     })
-  }).catch(() => {})
+  }
+}
+
+// 批量删除函数
+function batchDelete() {
+  console.log('batchDelete called')
+  console.log('ids.value:', ids.value)
+  
+  if (ids.value.length === 0) {
+    proxy.$modal.msgWarning("请选择要删除的数据")
+    return
+  }
+  
+  const moduleIdsStr = ids.value.join(',')
+  console.log('moduleIdsStr:', moduleIdsStr)
+  
+  // 使用更简单的确认方式
+  if (confirm('确定要删除选中的' + ids.value.length + '个模块吗？')) {
+    console.log('User confirmed batch deletion')
+    loading.value = true
+    
+    // 传递ID数组
+    delModule(ids.value).then((response) => {
+      console.log('Batch delete response:', response)
+      proxy.$modal.msgSuccess("删除成功")
+      getList()
+    }).catch((error) => {
+      console.error('Batch delete error:', error)
+      proxy.$modal.msgError("删除失败：" + (error.message || "未知错误"))
+    }).finally(() => {
+      loading.value = false
+    })
+  }
 }
 
 /** 展开/折叠操作 */
@@ -346,10 +474,28 @@ function refreshTable() {
   getList()
 }
 
+/** 搜索用户 */
+function searchUsers(query) {
+  if (query !== '') {
+    userLoading.value = true
+    // 使用分页接口而不是列表接口
+    pageUser({ pageNum: 1, pageSize: 20, userName: query }).then(response => {
+      userOptions.value = response.data.records || response.data || []
+      userLoading.value = false
+    })
+  } else {
+    userOptions.value = []
+  }
+}
+
 onMounted(() => {
   getList()
   getModuleTree()
   getAppList()
+  // 初始化用户列表
+  pageUser({ pageNum: 1, pageSize: 20 }).then(response => {
+    userOptions.value = response.data.records || response.data || []
+  })
 })
 
 // 强制关闭对话框函数
@@ -383,5 +529,12 @@ function forceCloseDialog() {
 function handleDialogClose() {
   open.value = false
   reset()
+}
+
+/** 多选框选中数据 */
+function handleSelectionChange(selection) {
+  ids.value = selection.map(item => item.moduleId)
+  single.value = selection.length !== 1
+  multiple.value = !selection.length
 }
 </script>
