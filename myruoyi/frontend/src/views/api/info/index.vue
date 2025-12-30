@@ -521,9 +521,12 @@ function submitForm() {
 function handleDelete(row) {
   const _apiIds = row.apiId || ids.value
   proxy.$modal.confirm('是否确认删除API接口编号为"' + _apiIds + '"的数据项？').then(function() {
+    loading.value = true
     return delInfo(_apiIds).then(() => {
-      getList()
       proxy.$modal.msgSuccess("删除成功")
+      getList()
+    }).finally(() => {
+      loading.value = false
     })
   }).catch(() => {})
 }

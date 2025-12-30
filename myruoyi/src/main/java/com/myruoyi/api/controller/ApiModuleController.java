@@ -91,9 +91,11 @@ public class ApiModuleController {
     @Operation(summary = "修改API模块")
     @PutMapping
     @PreAuthorize("hasAuthority('api:module:edit')")
-    public Result<Void> edit(@Validated @RequestBody ApiModule apiModule) {
+    public Result<ApiModule> edit(@Validated @RequestBody ApiModule apiModule) {
         apiModuleService.updateApiModule(apiModule);
-        return Result.success();
+        // 查询更新后的模块信息返回
+        ApiModule updatedModule = apiModuleService.selectApiModuleByModuleId(apiModule.getModuleId());
+        return Result.success(updatedModule);
     }
 
     /**

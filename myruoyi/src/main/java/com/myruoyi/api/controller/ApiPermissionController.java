@@ -107,6 +107,19 @@ public class ApiPermissionController {
     }
 
     /**
+     * 修改API权限
+     */
+    @Operation(summary = "修改API权限")
+    @PutMapping
+    @PreAuthorize("hasAuthority('api:permission:edit')")
+    public Result<ApiPermission> edit(@Validated @RequestBody ApiPermission apiPermission) {
+        apiPermissionService.updateApiPermission(apiPermission);
+        // 查询更新后的权限信息返回
+        ApiPermission updatedPermission = apiPermissionService.selectApiPermissionByPermissionId(apiPermission.getPermissionId());
+        return Result.success(updatedPermission);
+    }
+
+    /**
      * 新增API权限
      */
     @Operation(summary = "新增API权限")

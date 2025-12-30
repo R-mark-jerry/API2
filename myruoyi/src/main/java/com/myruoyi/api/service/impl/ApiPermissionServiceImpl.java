@@ -84,6 +84,22 @@ public class ApiPermissionServiceImpl extends ServiceImpl<ApiPermissionMapper, A
     }
 
     @Override
+    public int updateApiPermission(ApiPermission apiPermission) {
+        // 检查权限是否已存在（排除当前权限ID）
+        LambdaQueryWrapper<ApiPermission> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(ApiPermission::getApiId, apiPermission.getApiId())
+               .eq(ApiPermission::getPermissionType, apiPermission.getPermissionType())
+               .eq(ApiPermission::getPermissionTarget, apiPermission.getPermissionTarget())
+               .eq(ApiPermission::getPermissionScope, apiPermission.getPermissionScope())
+               .ne(ApiPermission::getPermissionId, apiPermission.getPermissionId());
+        if (count(wrapper) > 0) {
+            throw new BusinessException("权限已存在");
+        }
+        
+        return updateById(apiPermission) ? 1 : 0;
+    }
+
+    @Override
     public int batchInsertPermission(Long apiId, String permissionType, List<Long> permissionTargets, String permissionScope) {
         if (permissionTargets == null || permissionTargets.isEmpty()) {
             return 0;

@@ -27,12 +27,12 @@
 
     <select id="selectUserByUserName" parameterType="String" resultMap="SysUserResult">
         <include refid="selectUserVo"/>
-        where u.user_name = #{userName}
+        where u.user_name = #{userName} and u.deleted = 0
     </select>
 
     <select id="selectUserById" parameterType="Long" resultMap="SysUserResult">
         <include refid="selectUserVo"/>
-        where u.user_id = #{userId}
+        where u.user_id = #{userId} and u.deleted = 0
     </select>
 
     <select id="selectPermissionsByUserId" parameterType="Long" resultType="String">
@@ -87,6 +87,7 @@
     <select id="selectPage" parameterType="com.baomidou.mybatisplus.extension.plugins.pagination.Page" resultMap="SysUserResult">
         <include refid="selectUserVo"/>
         <where>
+            u.deleted = 0
             <if test="userName != null and userName != ''">
                 and u.user_name like concat('%', #{userName}, '%')
             </if>

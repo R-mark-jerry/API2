@@ -73,6 +73,14 @@ public interface ApiPermissionService extends IService<ApiPermission> {
     int insertApiPermission(ApiPermission apiPermission);
 
     /**
+     * 修改API权限
+     *
+     * @param apiPermission API权限
+     * @return 结果
+     */
+    int updateApiPermission(ApiPermission apiPermission);
+
+    /**
      * 批量新增API权限
      *
      * @param apiId API ID

@@ -168,7 +168,8 @@ const { queryParams, form, rules } = toRefs(data)
 function getList() {
   loading.value = true
   listModule(queryParams.value).then(response => {
-    moduleList.value = handleTree(response.data, 'moduleId')
+    // 直接从response.data中获取数据，然后处理树形结构
+    moduleList.value = handleTree(response.data.records || response.data || [], 'moduleId')
     loading.value = false
   })
 }
@@ -324,9 +325,12 @@ function submitForm() {
 /** 删除按钮操作 */
 function handleDelete(row) {
   proxy.$modal.confirm('是否确认删除名称为"' + row.moduleName + '"的数据项？').then(function() {
+    loading.value = true
     return delModule(row.moduleId).then(() => {
-      getList()
       proxy.$modal.msgSuccess("删除成功")
+      getList()
+    }).finally(() => {
+      loading.value = false
     })
   }).catch(() => {})
 }

@@ -8,6 +8,7 @@ import com.myruoyi.common.core.exception.BusinessException;
 import com.myruoyi.common.core.result.ResultCode;
 import com.myruoyi.common.utils.JwtUtils;
 import com.myruoyi.system.entity.SysUser;
+import com.myruoyi.system.mapper.SysRoleMapper;
 import com.myruoyi.system.mapper.SysUserMapper;
 import com.myruoyi.system.service.SysUserService;
 import lombok.RequiredArgsConstructor;
@@ -38,6 +39,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
     private final PasswordEncoder passwordEncoder;
     private final JwtUtils jwtUtils;
     private final RedisTemplate<String, Object> redisTemplate;
+    private final SysRoleMapper roleMapper;
 
     private static final String USER_INFO_KEY_PREFIX = "user:info:";
 
@@ -108,9 +110,9 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
     @Override
     public int deleteUserByIds(Long[] userIds) {
         // 删除用户与角色关联
-        // TODO: 删除用户角色关联
+        roleMapper.deleteUserRoleByUserIds(userIds);
         
-        // 删除用户
+        // 逻辑删除用户（MyBatis Plus会自动处理逻辑删除）
         return baseMapper.deleteBatchIds(Arrays.asList(userIds));
     }
 

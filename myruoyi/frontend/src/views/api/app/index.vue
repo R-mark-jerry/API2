@@ -279,8 +279,9 @@ const { queryParams, form, rules } = toRefs(data)
 function getList() {
   loading.value = true
   listApp(queryParams.value).then(response => {
-    appList.value = response.data.records || response.data
-    total.value = response.data.total || response.data.length
+    // 直接从response.data中获取records和total
+    appList.value = response.data.records || []
+    total.value = response.data.total || 0
     loading.value = false
   })
 }

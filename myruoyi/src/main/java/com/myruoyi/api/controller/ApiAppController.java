@@ -105,7 +105,7 @@ public class ApiAppController {
     @Operation(summary = "修改API应用")
     @PutMapping
     @PreAuthorize("hasAuthority('api:app:edit')")
-    public Result<Void> edit(@Validated @RequestBody ApiApp apiApp) {
+    public Result<ApiApp> edit(@Validated @RequestBody ApiApp apiApp) {
         // 检查应用权限
         if (!checkAppPermission(apiApp, "edit")) {
             return Result.error("您没有权限在该应用下进行操作");
@@ -118,7 +118,9 @@ public class ApiAppController {
         }
         
         apiAppService.updateApiApp(apiApp);
-        return Result.success();
+        // 查询更新后的应用信息返回
+        ApiApp updatedApp = apiAppService.selectApiAppByAppId(apiApp.getAppId());
+        return Result.success(updatedApp);
     }
 
     /**

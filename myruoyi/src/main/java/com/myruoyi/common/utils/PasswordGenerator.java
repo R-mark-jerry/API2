@@ -43,12 +43,20 @@ public class PasswordGenerator {
     }
 
     public static void main(String[] args) {
-        // 生成123456的BCrypt密码
-        String password = generateDefaultPassword();
-        System.out.println("123456的BCrypt密码: " + password);
+        // 测试数据库中的密码哈希
+        String dbPasswordHash = "$2a$10$7JB720yubVSOfvVWbfXCOOxjTOQcQjmrJF1ZM4nAVccp/.rkMlDW";
+        boolean matches123456 = matches("123456", dbPasswordHash);
+        System.out.println("数据库密码哈希验证 '123456': " + matches123456);
         
-        // 验证密码
-        boolean matches = matches("123456", password);
-        System.out.println("密码验证结果: " + matches);
+        boolean matchesAdmin123 = matches("admin123", dbPasswordHash);
+        System.out.println("数据库密码哈希验证 'admin123': " + matchesAdmin123);
+        
+        // 生成新的123456的BCrypt密码
+        String newPassword = generateDefaultPassword();
+        System.out.println("新生成的123456的BCrypt密码: " + newPassword);
+        
+        // 验证新密码
+        boolean newMatches = matches("123456", newPassword);
+        System.out.println("新密码验证结果: " + newMatches);
     }
 }

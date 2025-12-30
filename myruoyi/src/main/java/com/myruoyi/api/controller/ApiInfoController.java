@@ -121,9 +121,11 @@ public class ApiInfoController {
     @Operation(summary = "修改API接口")
     @PutMapping
     @PreAuthorize("hasAuthority('api:info:edit')")
-    public Result<Void> edit(@Validated @RequestBody ApiInfo apiInfo) {
+    public Result<ApiInfo> edit(@Validated @RequestBody ApiInfo apiInfo) {
         apiInfoService.updateApiInfo(apiInfo);
-        return Result.success();
+        // 查询更新后的API信息返回
+        ApiInfo updatedApiInfo = apiInfoService.selectApiInfoByApiId(apiInfo.getApiId());
+        return Result.success(updatedApiInfo);
     }
 
     /**
