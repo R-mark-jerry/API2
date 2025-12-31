@@ -1,11 +1,12 @@
 <template>
-  <component :is="type" v-bind="linkProps(to)">
+  <component :is="type" v-bind="linkProps(to)" @click="handleClick">
     <slot />
   </component>
 </template>
 
 <script setup>
 import { computed } from 'vue'
+import { useRouter } from 'vue-router'
 import { isExternal } from '@/utils/validate'
 
 const props = defineProps({
@@ -15,6 +16,7 @@ const props = defineProps({
   }
 })
 
+const router = useRouter()
 const isExternalLink = computed(() => isExternal(props.to))
 
 const type = computed(() => {
@@ -35,5 +37,16 @@ const linkProps = (to) => {
   return {
     to: to
   }
+}
+
+const handleClick = (event) => {
+  if (isExternalLink.value) {
+    // 外部链接，让默认行为处理
+    return
+  }
+  
+  // 阻止默认行为，手动处理路由导航
+  event.preventDefault()
+  router.push(props.to)
 }
 </script>

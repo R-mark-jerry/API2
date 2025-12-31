@@ -14,7 +14,7 @@
         background-color="#304156"
         text-color="#bfcbd9"
         active-text-color="#409EFF"
-        router
+        @select="handleMenuSelect"
       >
         <sidebar-item
           v-for="route in routes"
@@ -38,6 +38,12 @@ const router = useRouter()
 const userStore = useUserStore()
 
 const isCollapse = computed(() => false) // 可以从store获取侧边栏折叠状态
+
+const handleMenuSelect = (index) => {
+  if (index && index !== route.path) {
+    router.push(index)
+  }
+}
 
 const activeMenu = computed(() => {
   const { meta, path } = route
@@ -123,6 +129,16 @@ const routes = computed(() => {
     display: inline-block;
     width: 100%;
     overflow: hidden;
+    pointer-events: auto; /* 确保链接可以点击 */
+  }
+  
+  .el-menu-item {
+    pointer-events: auto; /* 确保菜单项可以点击 */
+    cursor: pointer; /* 显示手型光标 */
+  }
+  
+  .el-sub-menu {
+    pointer-events: auto; /* 确保子菜单可以点击 */
   }
 
   .svg-icon {
