@@ -1,10 +1,10 @@
 <template>
   <div class="app-container">
     <el-form :model="queryParams" ref="queryRef" :inline="true" v-show="showSearch" label-width="68px">
-      <el-form-item label="应用名称" prop="appName">
+      <el-form-item label="API名称" prop="appName">
         <el-input
           v-model="queryParams.appName"
-          placeholder="请输入应用名称"
+          placeholder="请输入API名称"
           clearable
           @keyup.enter="handleQuery"
         />
@@ -13,16 +13,6 @@
         <el-select v-model="queryParams.permissionType" placeholder="权限类型" clearable>
           <el-option
             v-for="dict in permissionTypeOptions"
-            :key="dict.value"
-            :label="dict.label"
-            :value="dict.value"
-          />
-        </el-select>
-      </el-form-item>
-      <el-form-item label="状态" prop="status">
-        <el-select v-model="queryParams.status" placeholder="权限状态" clearable>
-          <el-option
-            v-for="dict in statusOptions"
             :key="dict.value"
             :label="dict.label"
             :value="dict.value"
@@ -67,24 +57,22 @@
     <el-table v-loading="loading" :data="permissionList" @selection-change="handleSelectionChange">
       <el-table-column type="selection" width="55" align="center" />
       <el-table-column label="权限编号" align="center" prop="permissionId" />
-      <el-table-column label="应用名称" align="center" prop="appName" :show-overflow-tooltip="true" />
+      <el-table-column label="API名称" align="center" prop="apiName" :show-overflow-tooltip="true" />
       <el-table-column label="权限类型" align="center" prop="permissionType">
         <template #default="scope">
           <dict-tag :options="permissionTypeOptions" :value="scope.row.permissionType"/>
         </template>
       </el-table-column>
-      <el-table-column label="权限标识" align="center" prop="permissionCode" :show-overflow-tooltip="true" />
-      <el-table-column label="权限名称" align="center" prop="permissionName" :show-overflow-tooltip="true" />
-      <el-table-column label="状态" align="center" prop="status">
+      <el-table-column label="权限目标" align="center" prop="targetName" :show-overflow-tooltip="true" />
+      <el-table-column label="权限范围" align="center" prop="permissionScope">
         <template #default="scope">
-          <el-switch
-            v-model="scope.row.status"
-            active-value="0"
-            inactive-value="1"
-            @change="handleStatusChange(scope.row)"
-          ></el-switch>
+          <span v-if="scope.row.permissionScope === '1'">调用</span>
+          <span v-else-if="scope.row.permissionScope === '2'">调试</span>
+          <span v-else-if="scope.row.permissionScope === '3'">管理</span>
+          <span v-else>{{ scope.row.permissionScope }}</span>
         </template>
       </el-table-column>
+      <el-table-column label="负责人" align="center" prop="responsibleUserId" :show-overflow-tooltip="true" />
       <el-table-column label="创建时间" align="center" prop="createTime" width="180">
         <template #default="scope">
           <span>{{ parseTime(scope.row.createTime) }}</span>
@@ -119,8 +107,8 @@
     <!-- 添加或修改API权限对话框 -->
     <el-dialog :title="title" v-model="open" width="500px" append-to-body ref="permissionDialog">
       <el-form ref="permissionRef" :model="form" :rules="rules" label-width="80px">
-        <el-form-item label="应用ID" prop="appId">
-          <el-input v-model="form.appId" placeholder="请输入应用ID" />
+        <el-form-item label="API ID" prop="apiId">
+          <el-input v-model="form.apiId" placeholder="请输入API ID" />
         </el-form-item>
         <el-form-item label="权限类型" prop="permissionType">
           <el-select v-model="form.permissionType" placeholder="请选择权限类型">
@@ -132,14 +120,15 @@
             ></el-option>
           </el-select>
         </el-form-item>
-        <el-form-item label="权限标识" prop="permissionCode">
-          <el-input v-model="form.permissionCode" placeholder="请输入权限标识" />
+        <el-form-item label="权限目标" prop="permissionTarget">
+          <el-input v-model="form.permissionTarget" placeholder="请输入权限目标ID" />
         </el-form-item>
-        <el-form-item label="权限名称" prop="permissionName">
-          <el-input v-model="form.permissionName" placeholder="请输入权限名称" />
-        </el-form-item>
-        <el-form-item label="权限描述" prop="permissionDesc">
-          <el-input v-model="form.permissionDesc" type="textarea" placeholder="请输入权限描述" />
+        <el-form-item label="权限范围" prop="permissionScope">
+          <el-select v-model="form.permissionScope" placeholder="请选择权限范围">
+            <el-option label="调用" value="1" />
+            <el-option label="调试" value="2" />
+            <el-option label="管理" value="3" />
+          </el-select>
         </el-form-item>
         <el-form-item label="负责人" prop="responsibleUserId">
           <el-select
@@ -158,15 +147,6 @@
               :value="user.userId"
             />
           </el-select>
-        </el-form-item>
-        <el-form-item label="状态" prop="status">
-          <el-radio-group v-model="form.status">
-            <el-radio
-              v-for="dict in statusOptions"
-              :key="dict.value"
-              :label="dict.value"
-            >{{ dict.label }}</el-radio>
-          </el-radio-group>
         </el-form-item>
       </el-form>
       <template #footer>
@@ -214,24 +194,20 @@ const data = reactive({
     pageNum: 1,
     pageSize: 10,
     appName: undefined,
-    permissionType: undefined,
-    status: undefined
+    permissionType: undefined
   },
   rules: {
-    appId: [
-      { required: true, message: "应用ID不能为空", trigger: "blur" }
+    apiId: [
+      { required: true, message: "API ID不能为空", trigger: "blur" }
     ],
     permissionType: [
       { required: true, message: "权限类型不能为空", trigger: "blur" }
     ],
-    permissionCode: [
-      { required: true, message: "权限标识不能为空", trigger: "blur" }
+    permissionTarget: [
+      { required: true, message: "权限目标不能为空", trigger: "blur" }
     ],
-    permissionName: [
-      { required: true, message: "权限名称不能为空", trigger: "blur" }
-    ],
-    status: [
-      { required: true, message: "状态不能为空", trigger: "blur" }
+    permissionScope: [
+      { required: true, message: "权限范围不能为空", trigger: "blur" }
     ]
   }
 })
@@ -259,12 +235,10 @@ function cancel() {
 function reset() {
   form.value = {
     permissionId: undefined,
-    appId: undefined,
+    apiId: undefined,
     permissionType: undefined,
-    permissionCode: undefined,
-    permissionName: undefined,
-    permissionDesc: undefined,
-    status: "0",
+    permissionTarget: undefined,
+    permissionScope: undefined,
     responsibleUserId: undefined
   }
   // 注释掉这行，因为它可能会干扰对话框的显示
@@ -430,7 +404,7 @@ function directDelete(row) {
   }
   
   // 使用更简单的确认方式
-  if (confirm('确定要删除API权限"' + row.permissionName + '"吗？')) {
+  if (confirm('确定要删除API权限"' + (row.targetName || row.permissionId) + '"吗？')) {
     console.log('User confirmed deletion')
     loading.value = true
     
@@ -482,14 +456,16 @@ function batchDelete() {
 
 /** 状态修改 */
 function handleStatusChange(row) {
-  let text = row.status === "0" ? "启用" : "停用"
-  proxy.$modal.confirm('确认要"' + text + '""' + row.permissionName + '"权限吗？').then(function() {
-    return changePermissionStatus(row).then(() => {
-      proxy.$modal.msgSuccess(text + "成功")
-    })
-  }).catch(function() {
-    row.status = row.status === "0" ? "1" : "0"
-  })
+  // 由于后端实体类中没有status字段，暂时注释掉状态切换功能
+  // let text = row.status === "0" ? "启用" : "停用"
+  // proxy.$modal.confirm('确认要"' + text + '""' + row.permissionName + '"权限吗？').then(function() {
+  //   return changePermissionStatus(row).then(() => {
+  //     proxy.$modal.msgSuccess(text + "成功")
+  //   })
+  // }).catch(function() {
+  //   row.status = row.status === "0" ? "1" : "0"
+  // })
+  proxy.$modal.msgWarning("状态切换功能暂时不可用")
 }
 
 /** 搜索用户 */

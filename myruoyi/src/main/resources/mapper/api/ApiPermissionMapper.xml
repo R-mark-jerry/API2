@@ -14,6 +14,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         <result property="createTime"       column="create_time"       />
         <result property="updateBy"         column="update_by"         />
         <result property="updateTime"       column="update_time"       />
+        <result property="responsibleUserId" column="responsible_user_id"/>
         <result property="apiCode"          column="api_code"          />
         <result property="apiName"          column="api_name"          />
         <result property="targetName"       column="target_name"       />
@@ -21,7 +22,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 
     <sql id="selectApiPermissionVo">
         select p.permission_id, p.api_id, p.permission_type, p.permission_target, p.permission_scope,
-               p.create_by, p.create_time, p.update_by, p.update_time,
+               p.create_by, p.create_time, p.update_by, p.update_time, p.responsible_user_id,
                i.api_code, i.api_name,
                case when p.permission_type = '1' then r.role_name else u.nick_name end as target_name
         from api_permission p
@@ -29,6 +30,31 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         left join sys_role r on p.permission_type = '1' and p.permission_target = r.role_id
         left join sys_user u on p.permission_type = '2' and p.permission_target = u.user_id
     </sql>
+
+    <select id="selectApiPermissionPage" resultMap="ApiPermissionResult">
+        <include refid="selectApiPermissionVo"/>
+        <where>
+            <if test="apiPermission.apiId != null">
+                and p.api_id = #{apiPermission.apiId}
+            </if>
+            <if test="apiPermission.permissionType != null and apiPermission.permissionType != ''">
+                and p.permission_type = #{apiPermission.permissionType}
+            </if>
+            <if test="apiPermission.permissionTarget != null">
+                and p.permission_target = #{apiPermission.permissionTarget}
+            </if>
+            <if test="apiPermission.permissionScope != null and apiPermission.permissionScope != ''">
+                and p.permission_scope = #{apiPermission.permissionScope}
+            </if>
+            <if test="appName != null and appName != ''">
+                and i.api_name like concat('%', #{appName}, '%')
+            </if>
+            <if test="status != null and status != ''">
+                and p.status = #{status}
+            </if>
+        </where>
+        order by p.create_time desc
+    </select>
 
     <select id="selectPermissionsByApiId" parameterType="Long" resultMap="ApiPermissionResult">
         <include refid="selectApiPermissionVo"/>

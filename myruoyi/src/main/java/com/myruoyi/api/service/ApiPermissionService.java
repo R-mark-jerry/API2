@@ -30,7 +30,7 @@ public interface ApiPermissionService extends IService<ApiPermission> {
      */
     com.baomidou.mybatisplus.core.metadata.IPage<ApiPermission> selectApiPermissionPage(
             com.baomidou.mybatisplus.extension.plugins.pagination.Page<ApiPermission> page,
-            ApiPermission apiPermission);
+            ApiPermission apiPermission, String appName, String status);
 
     /**
      * 查询API权限列表

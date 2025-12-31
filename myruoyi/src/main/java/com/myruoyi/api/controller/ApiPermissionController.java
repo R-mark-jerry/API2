@@ -44,12 +44,11 @@ public class ApiPermissionController {
         
         com.baomidou.mybatisplus.extension.plugins.pagination.Page<ApiPermission> page = new com.baomidou.mybatisplus.extension.plugins.pagination.Page<>(pageNum, pageSize);
         ApiPermission query = new ApiPermission();
-        // 这里需要根据实际字段设置查询条件
-        // query.setAppName(appName);
-        // query.setPermissionType(permissionType);
-        // query.setStatus(status);
+        // 设置查询条件
+        query.setPermissionType(permissionType);
+        // 注意：ApiPermission实体中没有appName和status字段，这些可能是关联查询字段
         
-        com.baomidou.mybatisplus.core.metadata.IPage<ApiPermission> result = apiPermissionService.selectApiPermissionPage(page, query);
+        com.baomidou.mybatisplus.core.metadata.IPage<ApiPermission> result = apiPermissionService.selectApiPermissionPage(page, query, appName, status);
         return Result.success(result);
     }
 
@@ -160,17 +159,29 @@ public class ApiPermissionController {
      * 删除API权限
      */
     @Operation(summary = "删除API权限")
-    @DeleteMapping("/{permissionId}")
+    @DeleteMapping("/{permissionIds}")
     @PreAuthorize("hasAuthority('api:permission:remove')")
-    public Result<Void> remove(@PathVariable Long permissionId) {
-        // 检查权限权限
-        ApiPermission apiPermission = new ApiPermission();
-        apiPermission.setPermissionId(permissionId);
-        if (!checkPermissionPermission(apiPermission, "delete")) {
-            return Result.error("您没有权限删除权限ID为" + permissionId + "的权限");
+    public Result<Void> remove(@PathVariable String permissionIds) {
+        // 处理逗号分隔的ID字符串
+        String[] idArray = permissionIds.split(",");
+        
+        for (String idStr : idArray) {
+            try {
+                Long permissionId = Long.parseLong(idStr.trim());
+                
+                // 检查权限权限
+                ApiPermission apiPermission = new ApiPermission();
+                apiPermission.setPermissionId(permissionId);
+                if (!checkPermissionPermission(apiPermission, "delete")) {
+                    return Result.error("您没有权限删除权限ID为" + permissionId + "的权限");
+                }
+                
+                apiPermissionService.deleteApiPermissionByPermissionId(permissionId);
+            } catch (NumberFormatException e) {
+                return Result.error("无效的权限ID: " + idStr);
+            }
         }
         
-        apiPermissionService.deleteApiPermissionByPermissionId(permissionId);
         return Result.success();
     }
 

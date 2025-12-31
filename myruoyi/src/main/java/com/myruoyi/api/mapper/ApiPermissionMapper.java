@@ -17,6 +17,21 @@ import java.util.List;
 public interface ApiPermissionMapper extends BaseMapper<ApiPermission> {
 
     /**
+     * 分页查询API权限列表
+     *
+     * @param page 分页参数
+     * @param apiPermission 查询条件
+     * @param appName 应用名称
+     * @param status 状态
+     * @return 分页结果
+     */
+    com.baomidou.mybatisplus.core.metadata.IPage<ApiPermission> selectApiPermissionPage(
+            com.baomidou.mybatisplus.extension.plugins.pagination.Page<ApiPermission> page,
+            @Param("apiPermission") ApiPermission apiPermission,
+            @Param("appName") String appName,
+            @Param("status") String status);
+
+    /**
      * 根据API ID查询权限列表
      *
      * @param apiId API ID

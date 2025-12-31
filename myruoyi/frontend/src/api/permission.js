@@ -52,10 +52,22 @@ export function updatePermission(data) {
 
 // 删除API权限
 export function delPermission(permissionIds) {
-  return request({
-    url: '/permission/' + permissionIds,
-    method: 'delete'
-  })
+  // 如果是数组，需要特殊处理
+  if (Array.isArray(permissionIds)) {
+    // 对于数组，我们可以逐个删除或者使用逗号分隔的字符串
+    // 这里使用逗号分隔的方式
+    const idsStr = permissionIds.join(',')
+    return request({
+      url: '/permission/' + idsStr,
+      method: 'delete'
+    })
+  } else {
+    // 单个ID直接使用
+    return request({
+      url: '/permission/' + permissionIds,
+      method: 'delete'
+    })
+  }
 }
 
 // 修改权限状态
