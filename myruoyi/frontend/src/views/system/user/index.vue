@@ -72,14 +72,6 @@
       </el-col>
       <el-col :span="1.5">
         <el-button
-          type="info"
-          plain
-          icon="Test"
-          @click="testDelete"
-        >测试删除</el-button>
-      </el-col>
-      <el-col :span="1.5">
-        <el-button
           type="warning"
           plain
           icon="Download"
@@ -754,24 +746,4 @@ function batchDelete() {
   }
 }
 
-// 测试删除函数
-function testDelete() {
-  console.log('testDelete called')
-  alert('测试删除函数被调用了！')
-  // 直接调用删除逻辑，不使用确认框
-  const userIds = [1] // 测试删除用户ID为1
-  console.log('Testing delete with userIds:', userIds)
-  
-  loading.value = true
-  delUser(userIds).then((response) => {
-    console.log('Test delete response:', response)
-    proxy.$modal.msgSuccess("测试删除成功")
-    getList()
-  }).catch((error) => {
-    console.error('Test delete error:', error)
-    proxy.$modal.msgError("测试删除失败：" + (error.message || "未知错误"))
-  }).finally(() => {
-    loading.value = false
-  })
-}
 </script>
